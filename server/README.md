@@ -2,7 +2,7 @@
 
 ## Endpoints
 
-### /api/users/register
+### POST /api/users/register
 
 #### Description
 
@@ -75,6 +75,211 @@ The request body must be a JSON object containing the following fields:
           "location": "body"
         }
       ]
+    }
+    ```
+
+- **500 Internal Server Error**
+  - **Description**: An error occurred on the server.
+  - **Body**: A JSON object containing the error message.
+  - **Example**:
+    ```json
+    {
+      "message": "An unexpected error occurred"
+    }
+    ```
+
+### POST /api/login
+
+#### Description
+
+This endpoint logs in an existing user.
+
+#### HTTP Method
+
+`POST`
+
+#### Request Body
+
+The request body must be a JSON object containing the following fields:
+
+- `email` (string, required): The email address of the user. Must be a valid email format.
+- `password` (string, required): The password for the user. Must be at least 6 characters long.
+
+#### Example Request
+
+```json
+{
+  "email": "john.doe@example.com",
+  "password": "password123"
+}
+```
+
+#### Responses
+
+- **200 OK**
+
+  - **Description**: User successfully logged in.
+  - **Body**: A JSON object containing the authentication token and user details.
+  - **Example**:
+    ```json
+    {
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+      "user": {
+        "_id": "60d0fe4f5311236168a109ca",
+        "fullName": {
+          "firstName": "John",
+          "lastName": "Doe"
+        },
+        "email": "john.doe@example.com"
+      }
+    }
+    ```
+
+- **400 Bad Request**
+
+  - **Description**: Validation error. The request body is missing required fields or contains invalid data.
+  - **Body**: A JSON object containing the validation errors.
+  - **Example**:
+    ```json
+    {
+      "errors": [
+        {
+          "msg": "Please enter a valid email",
+          "param": "email",
+          "location": "body"
+        },
+        {
+          "msg": "Password must be at least 6 characters long",
+          "param": "password",
+          "location": "body"
+        }
+      ]
+    }
+    ```
+
+- **401 Unauthorized**
+
+  - **Description**: Invalid email or password.
+  - **Body**: A JSON object containing the error message.
+  - **Example**:
+    ```json
+    {
+      "message": "Invalid email or password"
+    }
+    ```
+
+- **500 Internal Server Error**
+  - **Description**: An error occurred on the server.
+  - **Body**: A JSON object containing the error message.
+  - **Example**:
+    ```json
+    {
+      "message": "An unexpected error occurred"
+    }
+    ```
+
+### GET /api/profile
+
+#### Description
+
+This endpoint retrieves the profile of the authenticated user.
+
+#### HTTP Method
+
+`GET`
+
+#### Headers
+
+- `Authorization` (string, required): The authentication token of the user.
+
+#### Example Request
+
+```
+GET /api/profile
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+#### Responses
+
+- **200 OK**
+
+  - **Description**: User profile retrieved successfully.
+  - **Body**: A JSON object containing the user details.
+  - **Example**:
+    ```json
+    {
+      "_id": "60d0fe4f5311236168a109ca",
+      "fullName": {
+        "firstName": "John",
+        "lastName": "Doe"
+      },
+      "email": "john.doe@example.com"
+    }
+    ```
+
+- **401 Unauthorized**
+
+  - **Description**: Authentication token is missing or invalid.
+  - **Body**: A JSON object containing the error message.
+  - **Example**:
+    ```json
+    {
+      "message": "Authentication token is missing or invalid"
+    }
+    ```
+
+- **500 Internal Server Error**
+  - **Description**: An error occurred on the server.
+  - **Body**: A JSON object containing the error message.
+  - **Example**:
+    ```json
+    {
+      "message": "An unexpected error occurred"
+    }
+    ```
+
+### GET /api/logout
+
+#### Description
+
+This endpoint logs out the authenticated user and blacklist the token provided in the cookie or headers.
+
+#### HTTP Method
+
+`GET`
+
+#### Headers
+
+- `Authorization` (string, required): The authentication token of the user or cookie.
+
+#### Example Request
+
+```
+GET /api/logout
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+#### Responses
+
+- **200 OK**
+
+  - **Description**: User successfully logged out.
+  - **Body**: A JSON object containing a success message.
+  - **Example**:
+    ```json
+    {
+      "message": "Logged out successfully"
+    }
+    ```
+
+- **401 Unauthorized**
+
+  - **Description**: Authentication token is missing or invalid.
+  - **Body**: A JSON object containing the error message.
+  - **Example**:
+    ```json
+    {
+      "message": "Authentication token is missing or invalid"
     }
     ```
 
