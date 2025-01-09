@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import cors from "cors";
 import connectDB from "./db/db.js";
 import userRoutes from "./routes/userRoutes.js";
+import mapRoutes from "./routes/mapRoutes.js";
 import captainRoutes from "./routes/captainRoutes.js";
 import cookieParser from "cookie-parser";
 
@@ -15,6 +16,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use("/api/users", userRoutes);
 app.use("/api/captains", captainRoutes);
+app.use("/api/maps", mapRoutes);
 
 app.get("/", (req, res) => {
   res.send("Hello World!");
