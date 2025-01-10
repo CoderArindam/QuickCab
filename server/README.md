@@ -88,7 +88,7 @@ The request body must be a JSON object containing the following fields:
     }
     ```
 
-### POST /api/login
+### POST /api/users/login
 
 #### Description
 
@@ -178,7 +178,7 @@ The request body must be a JSON object containing the following fields:
     }
     ```
 
-### GET /api/profile
+### GET /api/users/profile
 
 #### Description
 
@@ -195,7 +195,7 @@ This endpoint retrieves the profile of the authenticated user.
 #### Example Request
 
 ```
-GET /api/profile
+GET /api/users/profile
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
 
@@ -238,7 +238,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
     }
     ```
 
-### GET /api/logout
+### GET /api/users/logout
 
 #### Description
 
@@ -255,7 +255,7 @@ This endpoint logs out the authenticated user and blacklists the token provided 
 #### Example Request
 
 ```
-GET /api/logout
+GET /api/users/logout
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
 

@@ -2,6 +2,7 @@ import userModel from "../models/userModel.js";
 import { createUser } from "../services/userService.js";
 import { validationResult } from "express-validator";
 import blacklistedTokenModel from "../models/blacklistedTokenModel.js";
+import { getFare } from "../services/rideService.js";
 
 const registerUser = async (req, res, next) => {
   const errors = validationResult(req);
@@ -43,7 +44,11 @@ const loginUser = async (req, res, next) => {
     }
 
     const token = user.generateAuthToken();
-    res.cookie("token", token);
+    res.cookie("token", token, {
+      httpOnly: false, // Change to false if you want frontend access
+      secure: false, // Set to true if you're using HTTPS
+    });
+
     return res.status(200).json({ token, user });
   } catch (error) {
     return res.status(500).json({ message: error.message });
@@ -60,4 +65,21 @@ const logoutUser = async (req, res, next) => {
   res.clearCookie("token");
   return res.status(200).json({ message: "Logged out successfully" });
 };
-export { registerUser, loginUser, getUserProfile, logoutUser };
+
+const calculateFareForUser = async (req, res) => {
+  const { pickup, destination } = req.query;
+
+  try {
+    const fare = await getFare(pickup, destination);
+    return res.status(200).json(fare);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+export {
+  registerUser,
+  loginUser,
+  getUserProfile,
+  logoutUser,
+  calculateFareForUser,
+};

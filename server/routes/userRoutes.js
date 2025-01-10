@@ -1,6 +1,7 @@
 import express from "express";
 import { body } from "express-validator";
 import {
+  calculateFareForUser,
   getUserProfile,
   loginUser,
   logoutUser,
@@ -35,6 +36,6 @@ router.post(
 );
 
 router.get("/profile", authUser, getUserProfile);
-
+router.get("/get-fare", authUser, calculateFareForUser);
 router.get("/logout", authUser, logoutUser);
 export default router;
