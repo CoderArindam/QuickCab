@@ -27,7 +27,7 @@ const CaptainProtectedWrapper = ({ children }) => {
         );
         if (response.status === 200) {
           const data = response.data;
-          setCaptain(data.captain);
+          setCaptain(data);
         }
       } catch (err) {
         console.error("Error fetching captain profile:", err);

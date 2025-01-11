@@ -113,6 +113,8 @@ const getCurrentLocationService = async (lat, lng) => {
   }
 };
 
+// const getCaptainsInTheRadius = async();
+
 export {
   getAddressCoordinate,
   getDistanceTimeService,

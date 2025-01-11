@@ -27,7 +27,7 @@ const UserProtecterWrapper = ({ children }) => {
         );
         if (response.status === 200) {
           const data = response.data;
-          setUser(data.user);
+          setUser(data);
         }
       } catch (error) {
         console.error("Error fetching user profile:", error.message);

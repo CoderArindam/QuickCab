@@ -1,18 +1,29 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import CaptainDetails from "../../components/captain/CaptainDetails";
 import { Link } from "react-router-dom";
 import RidePopup from "../../components/captain/RidePopup";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import ConfirmRidePopup from "../../components/captain/ConfirmRidePopup";
+import { CaptainDataContext } from "../../context/captainContext";
+import { SocketContext } from "../../context/SocketContext";
 
 const CaptainHome = () => {
   const [showRidePopupPanel, setShowRidePopupPanel] = useState(false);
   const ridePopupPanelRef = useRef(null);
-
+  const { captain } = useContext(CaptainDataContext);
+  const { sendMessage, receiveMessage } = useContext(SocketContext);
+  console.log(captain);
   const [showConfirmRidePopupPanel, setShowConfirmRidePopupPanel] =
     useState(false);
   const confrimRidePopupPanelRef = useRef(null);
+
+  useEffect(() => {
+    sendMessage("join", {
+      userType: "captain",
+      userId: captain._id,
+    });
+  }, []);
 
   useGSAP(() => {
     if (showRidePopupPanel) {
@@ -69,7 +80,7 @@ const CaptainHome = () => {
         />
       </div>
       <div className="h-2/5 p-6">
-        <CaptainDetails />
+        <CaptainDetails captain={captain} />
       </div>
       <div
         className="fixed w-full z-10 bottom-0 translate-y-full bg-white px-3 py-10 pt-12"

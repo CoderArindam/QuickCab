@@ -2,7 +2,7 @@ import axios from "axios";
 import { useContext, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
-import { CaptainDataContext } from "../../context/captainContext";
+import { CaptainDataContext } from "../../context/CaptainContext";
 
 const CaptainLogin = () => {
   const [email, setEmail] = useState();
@@ -19,12 +19,14 @@ const CaptainLogin = () => {
     e.preventDefault();
     const response = await axios.post(
       `${import.meta.env.VITE_BASE_URL}/api/captains/login`,
-      credentials
+      credentials,
+      { withCredentials: true }
     );
 
     if (response.status === 200) {
       const data = response.data;
       localStorage.setItem("token", data.token);
+      localStorage.setItem("captainData", JSON.stringify(data.captain));
       setCaptain(data.captain);
       navigate("/captain-home");
     }

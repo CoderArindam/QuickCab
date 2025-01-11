@@ -4,14 +4,18 @@ import "./index.css";
 import App from "./App.jsx";
 import { BrowserRouter } from "react-router-dom";
 import UserContext from "./context/UserContext.jsx";
+
+import SocketProvider from "./context/SocketContext.jsx";
 import CaptainContext from "./context/captainContext.jsx";
 
 createRoot(document.getElementById("root")).render(
   <CaptainContext>
     <UserContext>
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
+      <SocketProvider>
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      </SocketProvider>
     </UserContext>
   </CaptainContext>
 );

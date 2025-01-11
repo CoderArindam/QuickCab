@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import "remixicon/fonts/remixicon.css";
@@ -9,6 +15,8 @@ import WaitingForDriver from "../../components/user/WaitingForDriver";
 import LookingForDriver from "../../components/user/LookingForDriver";
 import debounce from "lodash.debounce";
 import axios from "axios";
+import { SocketContext } from "../../context/SocketContext";
+import { UserDataContext } from "../../context/UserContext";
 
 const Home = () => {
   const [pickup, setPickup] = useState();
@@ -32,6 +40,8 @@ const Home = () => {
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [confirmedRideDetails, setConfirmRideDetails] = useState({});
   const [loading, setLoading] = useState(false);
+  const { sendMessage, receiveMessage } = useContext(SocketContext);
+  const { user } = useContext(UserDataContext);
 
   // Fetch user's current location
   useEffect(() => {
@@ -63,6 +73,13 @@ const Home = () => {
     };
 
     fetchUserLocation();
+  }, []);
+
+  useEffect(() => {
+    sendMessage("join", {
+      userType: "user",
+      userId: user._id,
+    });
   }, []);
 
   useGSAP(() => {

@@ -3,16 +3,14 @@ import { createContext, useState } from "react";
 export const CaptainDataContext = createContext();
 
 const CaptainContext = ({ children }) => {
-  const [captain, setCaptain] = useState(null);
-  const [loading, setIsLoading] = useState(false);
+  const [captain, setCaptain] = useState({});
+
   return (
-    <>
-      <CaptainDataContext.Provider
-        value={{ captain, setCaptain, loading, setIsLoading }}
-      >
+    <div>
+      <CaptainDataContext.Provider value={{ captain, setCaptain }}>
         {children}
       </CaptainDataContext.Provider>
-    </>
+    </div>
   );
 };
 
