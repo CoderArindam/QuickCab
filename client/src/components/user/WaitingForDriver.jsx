@@ -5,37 +5,12 @@ const WaitingForDriver = ({
   setVehicleFound,
   vehicleFound,
   confirmedRideDetails,
+  captainDetails,
 }) => {
   const { pickup, destination, otp, fare, vehicleType } =
     confirmedRideDetails || {};
 
-  useEffect(() => {
-    if (
-      confirmedRideDetails &&
-      pickup &&
-      destination &&
-      otp &&
-      fare !== undefined &&
-      vehicleType
-    ) {
-      const timer = setTimeout(() => {
-        setVehicleFound(false);
-        setShowWaitingForDriver(true);
-      }, 6000);
-
-      // Cleanup the timer if component unmounts or dependencies change
-      return () => clearTimeout(timer);
-    }
-  }, [
-    confirmedRideDetails,
-    pickup,
-    destination,
-    otp,
-    fare,
-    vehicleType,
-    setVehicleFound,
-    setShowWaitingForDriver,
-  ]);
+  const { fullName, vehicle } = captainDetails || {};
 
   const vehicleImages = {
     car: "https://swyft.pl/wp-content/uploads/2023/05/how-many-people-can-a-uberx-take.jpg",
@@ -66,8 +41,12 @@ const WaitingForDriver = ({
       <div className="flex items-center justify-between">
         <img className="h-[100px]" src={vehicleImages[vehicleType]} alt="" />
         <div className="text-right">
-          <h2 className="text-lg font-medium capitalize">Arindam Mukherjee</h2>
-          <h4 className="text-xl font-semibold -mt-1 -mb-1">WB40AJ3037</h4>
+          <h2 className="text-lg font-medium capitalize">
+            {fullName?.firstName} {fullName?.lastName}
+          </h2>
+          <h4 className="text-xl font-semibold -mt-1 -mb-1">
+            {vehicle?.plateNumber}
+          </h4>
           <p className="text-sm text-gray-600">Maruti Suzuki Alto</p>
           <span>OTP</span>
           <h1 className="text-lg font-semibold"> {otp}</h1>

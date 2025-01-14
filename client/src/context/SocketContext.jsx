@@ -16,9 +16,9 @@ const SocketProvider = ({ children }) => {
       console.log("Disconnected from socket server");
     });
 
-    return () => {
-      socket.current.disconnect();
-    };
+    // return () => {
+    //   socket.current.disconnect();
+    // };
   }, []);
 
   const sendMessage = (eventName, message) => {
@@ -34,7 +34,7 @@ const SocketProvider = ({ children }) => {
   };
 
   return (
-    <SocketContext.Provider value={{ sendMessage, receiveMessage }}>
+    <SocketContext.Provider value={{ sendMessage, receiveMessage, socket }}>
       {children}
     </SocketContext.Provider>
   );

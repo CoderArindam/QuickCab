@@ -29,15 +29,37 @@ export const initializeSocket = (server) => {
         console.error("Error updating socket ID:", error);
       }
     });
+
+    socket.on("update-captain-location", async (data) => {
+      try {
+        const { userId, location } = data;
+        if (!location || !location.lat || !location.lng) {
+          return socket.emit("error", { message: "invalid location data" });
+        }
+        const result = await captainModel.findOneAndUpdate(
+          { _id: userId },
+          {
+            location: {
+              lat: location.lat,
+              lng: location.lng,
+            },
+          }
+        );
+        console.log(result);
+      } catch (error) {
+        console.log(error.message);
+      }
+    });
+
     socket.on("disconnect", () => {
       console.log(`a user disconnected with ${socket.id}`);
     });
   });
 };
 
-export const sendMessageToSocketId = (socketId, message) => {
+export const sendMessageToSocketId = (socketId, messageObject) => {
   if (io) {
-    io.to(socketId).emit("message", message);
+    io.to(socketId).emit(messageObject.event, messageObject.data);
   } else {
     console.error("Socket.io is not initialized");
   }

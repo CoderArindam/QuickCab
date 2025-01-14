@@ -7,24 +7,74 @@ import gsap from "gsap";
 import ConfirmRidePopup from "../../components/captain/ConfirmRidePopup";
 import { CaptainDataContext } from "../../context/captainContext";
 import { SocketContext } from "../../context/SocketContext";
-
+import axios from "axios";
 const CaptainHome = () => {
   const [showRidePopupPanel, setShowRidePopupPanel] = useState(false);
   const ridePopupPanelRef = useRef(null);
   const { captain } = useContext(CaptainDataContext);
-  const { sendMessage, receiveMessage } = useContext(SocketContext);
-  console.log(captain);
+  const { sendMessage, receiveMessage, socket } = useContext(SocketContext);
+
   const [showConfirmRidePopupPanel, setShowConfirmRidePopupPanel] =
     useState(false);
   const confrimRidePopupPanelRef = useRef(null);
-
+  const [rideDetails, setRideDetails] = useState({});
   useEffect(() => {
+    // Join the socket room
     sendMessage("join", {
       userType: "captain",
       userId: captain._id,
     });
+
+    // Function to fetch the captain's current location
+    const fetchLocationAndSend = () => {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const { latitude, longitude } = position.coords;
+
+            sendMessage("update-captain-location", {
+              userId: captain._id,
+              location: { lat: latitude, lng: longitude },
+            });
+          },
+          (error) => {
+            console.error("Error getting location:", error);
+          }
+        );
+      } else {
+        console.error("Geolocation is not supported by this browser.");
+      }
+    };
+
+    // Interval to send location updates every 10 seconds
+    const intervalId = setInterval(fetchLocationAndSend, 10000);
+    fetchLocationAndSend();
+
+    // Cleanup interval on component unmount
+    return () => clearInterval(intervalId);
   }, []);
 
+  receiveMessage("new-ride", (data) => {
+    setRideDetails(data);
+
+    setShowRidePopupPanel(true);
+  });
+
+  const confirmRide = async () => {
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_BASE_URL}/api/rides/confirm`,
+        {
+          rideDetails,
+          captainDetails: captain,
+        },
+        { withCredentials: true }
+      );
+      console.log(response);
+    } catch (error) {
+      console.log(error.message);
+    }
+  };
   useGSAP(() => {
     if (showRidePopupPanel) {
       gsap.to(ridePopupPanelRef.current, {
@@ -48,14 +98,6 @@ const CaptainHome = () => {
       });
     }
   }, [showConfirmRidePopupPanel]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowRidePopupPanel(true);
-    }, 6000);
-
-    return () => clearTimeout(timer);
-  }, []);
 
   return (
     <div className="h-screen">
@@ -82,15 +124,21 @@ const CaptainHome = () => {
       <div className="h-2/5 p-6">
         <CaptainDetails captain={captain} />
       </div>
-      <div
-        className="fixed w-full z-10 bottom-0 translate-y-full bg-white px-3 py-10 pt-12"
-        ref={ridePopupPanelRef}
-      >
-        <RidePopup
-          setShowRidePopupPanel={setShowRidePopupPanel}
-          setShowConfirmRidePopupPanel={setShowConfirmRidePopupPanel}
-        />
-      </div>
+      {rideDetails && (
+        <div
+          className="fixed w-full z-10 bottom-0 translate-y-full bg-white px-3 py-10 pt-12"
+          ref={ridePopupPanelRef}
+        >
+          <RidePopup
+            setShowRidePopupPanel={setShowRidePopupPanel}
+            setShowConfirmRidePopupPanel={setShowConfirmRidePopupPanel}
+            rideDetails={rideDetails}
+            setRideDetails={setRideDetails}
+            confirmRide={confirmRide}
+          />
+        </div>
+      )}
+
       <div
         className="fixed w-full z-10 bottom-0 translate-y-full bg-white px-3 py-10 pt-12"
         ref={confrimRidePopupPanelRef}
@@ -98,6 +146,7 @@ const CaptainHome = () => {
         <ConfirmRidePopup
           setShowConfirmRidePopupPanel={setShowConfirmRidePopupPanel}
           setShowRidePopupPanel={setShowRidePopupPanel}
+          rideDetails={rideDetails}
         />
       </div>
 

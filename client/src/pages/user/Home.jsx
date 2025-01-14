@@ -17,6 +17,8 @@ import debounce from "lodash.debounce";
 import axios from "axios";
 import { SocketContext } from "../../context/SocketContext";
 import { UserDataContext } from "../../context/UserContext";
+import { useNavigate } from "react-router-dom";
+import LiveTracking from "../../components/tracking/LiveTracking";
 
 const Home = () => {
   const [pickup, setPickup] = useState();
@@ -34,6 +36,7 @@ const Home = () => {
   const [vehicleFound, setVehicleFound] = useState(false);
   const waitingForDriverRef = useRef(null);
   const [showWaitingForDriver, setShowWaitingForDriver] = useState(false);
+  const [showRidingPanel, setShowRidingPanel] = useState(false);
   const [activeField, setActiveField] = useState(null); // 'pickup' or 'destination'
   const [suggestions, setSuggestions] = useState([]);
   const [fare, setFare] = useState(null);
@@ -41,7 +44,11 @@ const Home = () => {
   const [confirmedRideDetails, setConfirmRideDetails] = useState({});
   const [loading, setLoading] = useState(false);
   const { sendMessage, receiveMessage } = useContext(SocketContext);
+  const [captainDetails, setCaptainDetails] = useState();
   const { user } = useContext(UserDataContext);
+  const [rideDetails, setRideDetails] = useState();
+  const [foundTrip, setFoundTrip] = useState();
+  const navigate = useNavigate();
 
   // Fetch user's current location
   useEffect(() => {
@@ -76,11 +83,43 @@ const Home = () => {
   }, []);
 
   useEffect(() => {
+    // Join the user to the socket room
     sendMessage("join", {
       userType: "user",
       userId: user._id,
     });
-  }, []);
+
+    // Listen for ride confirmation
+    receiveMessage("ride-confirmed", (data) => {
+      console.log("Ride Confirmed:", data);
+      setShowLookingForDriver(false);
+      setShowWaitingForDriver(true);
+      setCaptainDetails(data.captain);
+      setRideDetails(data);
+    });
+
+    // Listen for ride start
+    receiveMessage("ride-started", (data) => {
+      console.log("Ride Started:", data);
+      setShowWaitingForDriver(false);
+      navigate("/riding", {
+        state: {
+          ride: data,
+        },
+      });
+    });
+
+    // Listen for captain location updates
+    receiveMessage("update-captain-location", (data) => {
+      console.log("Captain Location Updated:", data);
+      setCaptainDetails((prevDetails) => ({
+        ...prevDetails,
+        location: data.location, // Update the location field
+      }));
+    });
+    console.log("updated driver location", captainDetails);
+    // Cleanup on unmount
+  }, [sendMessage, receiveMessage]);
 
   useGSAP(() => {
     if (panelOpen) {
@@ -224,7 +263,6 @@ const Home = () => {
     }
   };
 
-  console.log(fare);
   const handleConfirmRide = async (boolean) => {
     if (boolean) {
       try {
@@ -241,6 +279,7 @@ const Home = () => {
         );
         const data = response.data;
         setConfirmRideDetails(data);
+        setFoundTrip(true);
       } catch (error) {
         console.log(error.message);
       }
@@ -255,15 +294,20 @@ const Home = () => {
         src="https://upload.wikimedia.org/wikipedia/commons/c/cc/Uber_logo_2018.png"
         alt=""
       />
-      <div className="h-screen w-screen">
-        <img
+
+      {/* <img
           src="https://i.ibb.co/kQsFscG/Screenshot-2025-01-06-180735.png"
           className="h-full w-full object-cover "
           alt=""
-        />
-        {/* image for temporary use  */}
-      </div>
-      <div className=" flex flex-col justify-end h-screen absolute top-0 w-full z-20">
+        /> */}
+      <LiveTracking captainDetails={captainDetails} rideDetails={rideDetails} />
+      {/* image for temporary use  */}
+
+      <div
+        className={`flex-col justify-end h-screen absolute top-0 w-full z-20 ${
+          foundTrip ? "hidden" : "flex"
+        }`}
+      >
         <div className="h-[30%] p-6 bg-white relative">
           <h5
             ref={panelCloseRef}
@@ -369,6 +413,7 @@ const Home = () => {
           setVehicleFound={setVehicleFound}
           vehicleFound={vehicleFound}
           confirmedRideDetails={confirmedRideDetails}
+          captainDetails={captainDetails}
         />
       </div>
     </div>

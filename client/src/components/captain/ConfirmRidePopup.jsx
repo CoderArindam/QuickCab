@@ -1,10 +1,33 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const ConfirmRidePopup = ({
   setShowConfirmRidePopupPanel,
   setShowRidePopupPanel,
+  rideDetails,
 }) => {
+  const { pickup, destination, fare, user } = rideDetails || {};
+  const { fullName } = user || {};
+  const [otp, setOtp] = useState();
   const navigate = useNavigate();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const response = await axios.post(
+      `${import.meta.env.VITE_BASE_URL}/api/rides/start-ride`,
+      { otp, rideId: rideDetails._id },
+      {
+        withCredentials: true,
+      }
+    );
+    console.log(response);
+    if (response.status === 200) {
+      navigate("/captain-riding", { state: { rideData: rideDetails } });
+    } else {
+      throw new Error("invalid otp");
+    }
+  };
   return (
     <div>
       <h5
@@ -23,7 +46,10 @@ const ConfirmRidePopup = ({
             src="https://i.pinimg.com/236x/af/26/28/af26280b0ca305be47df0b799ed1b12b.jpg"
             alt=""
           />
-          <h2 className="text-lg font-medium capitalize">Trishita</h2>
+          <h2 className="text-lg font-medium capitalize">
+            {fullName?.firstName}
+            <span> {fullName?.lastName}</span>
+          </h2>
         </div>
         <h5 className="text-lg font-semibold">2.2 KM</h5>
       </div>
@@ -32,37 +58,37 @@ const ConfirmRidePopup = ({
           <div className="flex items-center gap-5 p-3 border-b-2">
             <i className="ri-map-pin-user-fill"></i>
             <div>
-              <h3 className="text-lg font-medium">562/11-A</h3>
-              <p className="text-sm -mt-1 text-gray-600">Mahiskapur,Durgapur</p>
+              <p className="text-sm -mt-1 text-gray-600">{pickup}</p>
             </div>
           </div>
           <div className="flex items-center gap-5 p-3 border-b-2">
             <i className="text-lg ri-map-pin-2-fill"></i>
             <div>
-              <h3 className="text-lg font-medium">562/11-A</h3>
-              <p className="text-sm -mt-1 text-gray-600">Andal North Bazar</p>
+              <p className="text-sm -mt-1 text-gray-600">{destination}</p>
             </div>
           </div>
           <div className="flex items-center gap-5 p-3">
             <i className="ri-currency-line"></i>
             <div>
-              <h3 className="text-lg font-medium">₹888</h3>
-              <p className="text-sm -mt-1 text-gray-600">Cash Cash</p>
+              <h3 className="text-lg font-medium">₹{fare}</h3>
+              <p className="text-sm -mt-1 text-gray-600">Cash </p>
             </div>
           </div>
         </div>
 
         <div className="mt-6 w-full">
-          <form>
+          <form onSubmit={(e) => handleSubmit(e)}>
             <input
               type="number"
               className="bg-[#eee] px-6 py-4 font-mono text-lg rounded-lg w-full mt-3"
               placeholder="Enter OTP"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value)}
             />
 
             <button
               className="w-full mt-5 text-lg flex justify-center bg-green-600 text-white font-semibold p-3 rounded-lg"
-              onClick={() => navigate("/captain-riding")}
+              type="submit"
             >
               Start Ride
             </button>

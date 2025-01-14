@@ -1,11 +1,13 @@
 import React, { useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import FinishCaptainRide from "../../components/captain/FinishCaptainRide";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 
 const CaptainRiding = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const rideData = location.state?.rideData;
   const [showFinishCaptainRidePanel, setShowFinishCaptainRidePanel] =
     useState(false);
   const finishCaptainRidePanelRef = useRef(null);
@@ -25,6 +27,7 @@ const CaptainRiding = () => {
   }, [showFinishCaptainRidePanel]);
   return (
     <div className="h-screen flex flex-col">
+      {/* Use rideData as needed */}
       <div className="fixed p-6 top-0 flex items-center justify-between w-screen bg-white shadow-md z-10">
         <img
           className="w-16"
@@ -48,7 +51,9 @@ const CaptainRiding = () => {
           <h4 className="text-xl font-semibold mb-4">5 kms away</h4>
           <button
             className="px-6 py-2 mb-2 bg-green-500 text-white font-semibold rounded-full shadow-md"
-            onClick={() => nav}
+            onClick={() =>
+              navigate("/captain-payment", { state: { rideData } })
+            }
           >
             Finish Ride
           </button>
@@ -62,6 +67,7 @@ const CaptainRiding = () => {
         ref={finishCaptainRidePanelRef}
       >
         <FinishCaptainRide
+          rideData={rideData}
           setShowFinishCaptainRidePanel={setShowFinishCaptainRidePanel}
         />
       </div>
