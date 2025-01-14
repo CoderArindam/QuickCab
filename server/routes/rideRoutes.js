@@ -31,7 +31,7 @@ router.post(
 
 router.post(
   "/confirm",
-  authCaptain,
+  // authCaptain,
   body("rideDetails._id").isMongoId().withMessage("invalid ride id"),
   confirmRide
 );
