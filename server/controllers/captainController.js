@@ -56,13 +56,13 @@ const loginCaptain = async (req, res, next) => {
     return res.status(401).json({ message: "Invalid email or password" });
   }
   const token = captain.generateAuthToken();
-  res.cookie("token", token);
-  // res.cookie("token", token, {
-  //   httpOnly: true,
-  //   secure: process.env.NODE_ENV === "production",
-  //   sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
-  //   maxAge: 24 * 60 * 60 * 1000, // 1 day
-  // });
+  // res.cookie("token", token);
+  res.cookie("token", token, {
+    httpOnly: false,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+    maxAge: 24 * 60 * 60 * 1000, // 1 day
+  });
   return res.status(200).json({ token, captain });
 };
 
