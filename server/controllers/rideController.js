@@ -35,9 +35,10 @@ const createRide = async (req, res) => {
     const captainsInRadius = await getCaptainsInTheRadius(
       pickupCoordinates.lat,
       pickupCoordinates.lng,
-      5
+      10
     );
 
+    console.log("found captains", captainsInRadius);
     ride.otp = "";
 
     const rideWithUser = await rideModel.findOne(ride._id).populate("user");
