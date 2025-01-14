@@ -35,7 +35,7 @@ const createRide = async (req, res) => {
     const captainsInRadius = await getCaptainsInTheRadius(
       pickupCoordinates.lat,
       pickupCoordinates.lng,
-      10
+      30
     );
 
     console.log("found captains", captainsInRadius);
