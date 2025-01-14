@@ -45,8 +45,8 @@ const loginUser = async (req, res, next) => {
 
     const token = user.generateAuthToken();
     res.cookie("token", token, {
-      httpOnly: false, // Change to false if you want frontend access
-      secure: false, // Set to true if you're using HTTPS
+      httpOnly: false,
+      secure: process.env.NODE_ENV === "production",
     });
 
     return res.status(200).json({ token, user });
