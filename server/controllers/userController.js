@@ -44,12 +44,13 @@ const loginUser = async (req, res, next) => {
     }
 
     const token = user.generateAuthToken();
-    res.cookie("token", token, {
-      httpOnly: false,
-      // secure: process.env.NODE_ENV === "production",
-      secure: false,
-    });
+    const isProduction = process.env.NODE_ENV === "production";
 
+    res.cookie("token", token, {
+      httpOnly: true, // More secure; prevents client-side JS access
+      secure: isProduction, // Ensures the browser only sends the cookie over HTTPS
+      sameSite: isProduction ? "None" : "Lax", // Adjust based on cross-site requirements
+    });
     return res.status(200).json({ token, user });
   } catch (error) {
     return res.status(500).json({ message: error.message });
