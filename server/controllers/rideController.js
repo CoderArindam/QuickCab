@@ -60,6 +60,8 @@ const confirmRide = async (req, res) => {
     return res.status(400).json({ errors: errors.array() });
   }
   const { rideDetails, captainDetails } = req.body;
+  console.log("rideDetails from ride controller", rideDetails);
+  console.log("captainDetails from ride controller", captainDetails);
 
   const rideId = rideDetails._id;
 

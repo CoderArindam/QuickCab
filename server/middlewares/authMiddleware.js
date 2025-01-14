@@ -42,7 +42,10 @@ const authCaptain = async (req, res, next) => {
   }
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    console.log("decoded from auth middleware", decoded);
+
     const captain = await captainModel.findById(decoded._id);
+    console.log("captain from auth middleware", captain);
     if (!captain) {
       return res.status(404).json({ message: "Captain not found" });
     }
