@@ -13,10 +13,7 @@ connectDB();
 const app = express();
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "https://0j5nddp5-5173.inc1.devtunnels.ms",
-    ], // Your frontend origin
+    origin: ["http://localhost:5173", "https://quicab.vercel.app"], // Your frontend origin
     credentials: true, // Allow credentials (cookies)
   })
 );
