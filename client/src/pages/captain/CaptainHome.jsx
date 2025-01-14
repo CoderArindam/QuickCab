@@ -5,7 +5,7 @@ import RidePopup from "../../components/captain/RidePopup";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import ConfirmRidePopup from "../../components/captain/ConfirmRidePopup";
-import { CaptainDataContext } from "../../context/captainContext";
+import { CaptainDataContext } from "../../context/CaptainContext";
 import { SocketContext } from "../../context/SocketContext";
 import axios from "axios";
 const CaptainHome = () => {
