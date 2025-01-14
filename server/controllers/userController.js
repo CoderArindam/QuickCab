@@ -47,8 +47,8 @@ const loginUser = async (req, res, next) => {
     const isProduction = process.env.NODE_ENV === "production";
 
     res.cookie("token", token, {
-      httpOnly: true, // More secure; prevents client-side JS access
-      secure: isProduction, // Ensures the browser only sends the cookie over HTTPS
+      httpOnly: false, // More secure; prevents client-side JS access
+      secure: isProduction ? true : false, // Ensures the browser only sends the cookie over HTTPS
       sameSite: isProduction ? "None" : "Lax", // Adjust based on cross-site requirements
     });
     return res.status(200).json({ token, user });
