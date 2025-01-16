@@ -101,7 +101,7 @@ const CaptainHome = () => {
   }, [showConfirmRidePopupPanel]);
 
   return (
-    <div className="h-screen">
+    <div className="h-[90vh]">
       <div className="fixed p-6 top-0 flex items-center justify-between w-screen">
         <img
           className="w-16"
