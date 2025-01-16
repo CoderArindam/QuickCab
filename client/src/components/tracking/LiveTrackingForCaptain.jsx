@@ -29,11 +29,11 @@ const createImageMarkerContent = (imgUrl) => {
   return markerEl;
 };
 
-// Helper: Animate marker movement smoothly
+// Smooth Marker Animation
 const animateMarker = (marker, oldLoc, newLoc, duration = 5000) => {
   if (!marker || !oldLoc || !newLoc) return;
 
-  const steps = 60; // Frames for animation
+  const steps = 60;
   let count = 0;
   const latStep = (newLoc.lat - oldLoc.lat) / steps;
   const lngStep = (newLoc.lng - oldLoc.lng) / steps;
@@ -62,13 +62,34 @@ const LiveTrackingForCaptain = ({ userLocation, captainLocation, captain }) => {
     setMap(mapInstance);
   }, []);
 
-  // Update the captain marker smoothly
+  // Fetch directions for the polyline
+  useEffect(() => {
+    if (!captainLocation || !userLocation || !googleLoaded) return;
+
+    const directionsService = new window.google.maps.DirectionsService();
+    directionsService.route(
+      {
+        origin: captainLocation,
+        destination: userLocation,
+        travelMode: window.google.maps.TravelMode.DRIVING,
+      },
+      (result, status) => {
+        if (status === "OK") {
+          setDirections(result);
+        } else {
+          console.error("Failed to fetch directions:", status);
+        }
+      }
+    );
+  }, [captainLocation, userLocation, googleLoaded]);
+
+  // Update captain's marker
   useEffect(() => {
     if (!googleLoaded || !map || !captainLocation) return;
 
-    const captainEl = createImageMarkerContent(
-      vehicleIcons[captain?.vehicle?.vehicleType] || vehicleIcons.car
-    );
+    const vehicleType = captain?.vehicle?.vehicleType || "car";
+    const captainEl = createImageMarkerContent(vehicleIcons[vehicleType]);
+
     if (!captainMarkerRef.current) {
       captainMarkerRef.current =
         new window.google.maps.marker.AdvancedMarkerElement({
@@ -81,16 +102,9 @@ const LiveTrackingForCaptain = ({ userLocation, captainLocation, captain }) => {
       animateMarker(captainMarkerRef.current, currentPosition, captainLocation);
     }
     setMapCenter(captainLocation);
+  }, [googleLoaded, map, captainLocation, captain]);
 
-    return () => {
-      if (captainMarkerRef.current) {
-        captainMarkerRef.current.map = null;
-        captainMarkerRef.current = null;
-      }
-    };
-  }, [googleLoaded, map, captainLocation, captain?.vehicle?.vehicleType]);
-
-  // Update the user marker
+  // Update user's marker
   useEffect(() => {
     if (!googleLoaded || !map || !userLocation) return;
 
@@ -108,35 +122,17 @@ const LiveTrackingForCaptain = ({ userLocation, captainLocation, captain }) => {
         userLocation.lng
       );
     }
-
-    return () => {
-      if (userMarkerRef.current) {
-        userMarkerRef.current.map = null;
-        userMarkerRef.current = null;
-      }
-    };
   }, [googleLoaded, map, userLocation]);
 
-  // Fetch directions and render the route
+  // Adjust map bounds dynamically
   useEffect(() => {
-    if (!googleLoaded || !map || !captainLocation || !userLocation) return;
-
-    const directionsService = new window.google.maps.DirectionsService();
-    directionsService.route(
-      {
-        origin: captainLocation,
-        destination: userLocation,
-        travelMode: window.google.maps.TravelMode.DRIVING,
-      },
-      (result, status) => {
-        if (status === "OK") {
-          setDirections(result);
-        } else {
-          console.error("Failed to fetch directions:", status);
-        }
-      }
-    );
-  }, [googleLoaded, map, captainLocation, userLocation]);
+    if (map && captainLocation && userLocation) {
+      const bounds = new window.google.maps.LatLngBounds();
+      bounds.extend(captainLocation);
+      bounds.extend(userLocation);
+      map.fitBounds(bounds);
+    }
+  }, [map, captainLocation, userLocation]);
 
   return (
     <LoadScript
@@ -154,6 +150,7 @@ const LiveTrackingForCaptain = ({ userLocation, captainLocation, captain }) => {
             mapId: MAP_ID,
           }}
         >
+          {/* Render Directions */}
           {directions && (
             <DirectionsRenderer
               directions={directions}

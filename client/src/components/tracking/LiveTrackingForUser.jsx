@@ -29,11 +29,11 @@ const createImageMarkerContent = (imgUrl) => {
   return markerEl;
 };
 
-// Helper: Animate marker movement smoothly
+// Smooth Marker Animation
 const animateMarker = (marker, oldLoc, newLoc, duration = 5000) => {
   if (!marker || !oldLoc || !newLoc) return;
 
-  const steps = 60; // Frames for animation
+  const steps = 60;
   let count = 0;
   const latStep = (newLoc.lat - oldLoc.lat) / steps;
   const lngStep = (newLoc.lng - oldLoc.lng) / steps;
@@ -66,7 +66,7 @@ const LiveTrackingForUser = ({
     setMap(mapInstance);
   }, []);
 
-  // Fetch directions for the polyline
+  // Fetch directions
   useEffect(() => {
     if (!captainLocation || !userLocation || !googleLoaded) return;
 
@@ -87,29 +87,7 @@ const LiveTrackingForUser = ({
     );
   }, [captainLocation, userLocation, googleLoaded]);
 
-  // Create or update the user's marker
-  useEffect(() => {
-    if (!googleLoaded || !map || !userLocation) return;
-
-    const userEl = createImageMarkerContent(userIconUrl);
-    if (!userMarkerRef.current) {
-      userMarkerRef.current =
-        new window.google.maps.marker.AdvancedMarkerElement({
-          map,
-          position: userLocation,
-          content: userEl,
-        });
-    } else {
-      userMarkerRef.current.position = new window.google.maps.LatLng(
-        userLocation.lat,
-        userLocation.lng
-      );
-    }
-
-    setMapCenter(userLocation);
-  }, [googleLoaded, map, userLocation]);
-
-  // Create or update the captain's marker with animation
+  // Update captain's marker
   useEffect(() => {
     if (!googleLoaded || !map || !captainLocation) return;
 
@@ -129,6 +107,39 @@ const LiveTrackingForUser = ({
     }
   }, [googleLoaded, map, captainLocation, captainDetails]);
 
+  // Update user's marker
+  useEffect(() => {
+    if (!googleLoaded || !map || !userLocation) return;
+
+    const userEl = createImageMarkerContent(userIconUrl);
+
+    if (!userMarkerRef.current) {
+      userMarkerRef.current =
+        new window.google.maps.marker.AdvancedMarkerElement({
+          map,
+          position: userLocation,
+          content: userEl,
+        });
+    } else {
+      userMarkerRef.current.position = new window.google.maps.LatLng(
+        userLocation.lat,
+        userLocation.lng
+      );
+    }
+
+    setMapCenter(userLocation);
+  }, [googleLoaded, map, userLocation]);
+
+  // Adjust map bounds dynamically
+  useEffect(() => {
+    if (map && captainLocation && userLocation) {
+      const bounds = new window.google.maps.LatLngBounds();
+      bounds.extend(captainLocation);
+      bounds.extend(userLocation);
+      map.fitBounds(bounds);
+    }
+  }, [map, captainLocation, userLocation]);
+
   return (
     <LoadScript
       googleMapsApiKey={GOOGLE_MAPS_API_KEY}
@@ -145,7 +156,7 @@ const LiveTrackingForUser = ({
             mapId: MAP_ID,
           }}
         >
-          {/* Show directions with polyline */}
+          {/* Render Directions */}
           {directions && (
             <DirectionsRenderer
               directions={directions}
@@ -155,7 +166,7 @@ const LiveTrackingForUser = ({
                   strokeOpacity: 0.9,
                   strokeWeight: 6,
                 },
-                suppressMarkers: true, // Suppress default markers
+                suppressMarkers: true,
               }}
             />
           )}
