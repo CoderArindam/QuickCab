@@ -2,6 +2,7 @@ import express from "express";
 import { body, param } from "express-validator";
 import {
   cancelRide,
+  checkRideStatus,
   confirmRide,
   createRide,
   getCaptainLocation,
@@ -51,6 +52,8 @@ router.post(
   body("rideId").isMongoId().withMessage("invalid ride id"),
   cancelRide
 );
+
+router.post("/check-ride-status", authUser, checkRideStatus);
 // GET captain location
 router.get(
   "/:rideId/captain/:captainId/location",

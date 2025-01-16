@@ -3,6 +3,7 @@ import rideModel from "../models/rideModel.js";
 import { getDistanceTimeService } from "./mapsService.js";
 import crypto from "crypto";
 import { sendMessageToSocketId } from "../socket.js";
+import captainModel from "../models/captainModel.js";
 
 const getOTP = (num) => {
   const otp = crypto
@@ -113,6 +114,18 @@ const confirmRideService = async ({ rideId, captainDetails }) => {
     if (!updatedRide) {
       console.error("Ride not found or failed to update");
       throw new Error("Ride not found or failed to update");
+    }
+    // Update the captain's status to "riding"
+    const updatedCaptain = await captainModel.findOneAndUpdate(
+      { _id: captainDetails._id },
+      {
+        status: "riding",
+      },
+      { new: true }
+    );
+    if (!updatedCaptain) {
+      console.error("Captain not found or failed to update");
+      throw new Error("Captain not found or failed to update");
     }
 
     // Fetch the ride with populated user details

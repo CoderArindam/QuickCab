@@ -23,6 +23,11 @@ const registerUser = async (req, res, next) => {
   try {
     const user = await createUser(firstName, lastName, email, hashPassword);
     const token = user.generateAuthToken();
+    res.cookie("token", token, {
+      httpOnly: false, // More secure; prevents client-side JS access
+      secure: isProduction ? true : false, // Ensures the browser only sends the cookie over HTTPS
+      sameSite: isProduction ? "None" : "Lax", // Adjust based on cross-site requirements
+    });
     return res.status(201).json({ token, user });
   } catch (error) {
     return res.status(500).json({ message: error.message });

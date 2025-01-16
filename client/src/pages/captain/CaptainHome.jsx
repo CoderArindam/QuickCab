@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
 import CaptainDetails from "../../components/captain/CaptainDetails";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import RidePopup from "../../components/captain/RidePopup";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
@@ -18,10 +18,35 @@ const CaptainHome = () => {
   const [userDetails, setUserDetails] = useState();
   const [captainLocation, setCaptainLocation] = useState();
 
+  const [rideDetails, setRideDetails] = useState({});
   const [showConfirmRidePopupPanel, setShowConfirmRidePopupPanel] =
     useState(false);
+  console.log(rideDetails);
   const confrimRidePopupPanelRef = useRef(null);
-  const [rideDetails, setRideDetails] = useState({});
+
+  const navigate = useNavigate();
+
+  // Fetch ongoing ride on reload
+  useEffect(() => {
+    const fetchOngoingRide = async () => {
+      try {
+        const response = await axios.get(
+          `${import.meta.env.VITE_BASE_URL}/api/captains/check-ongoing-ride`,
+          { params: { captainId: captain._id }, withCredentials: true }
+        );
+        const { ride } = response.data;
+        setRideDetails(ride);
+        setShowConfirmRidePopupPanel(true);
+        setUserDetails(ride.user);
+        setCaptainLocation(ride.captain.location);
+      } catch (error) {
+        console.error("Error fetching ongoing ride:", error.message);
+      }
+    };
+
+    fetchOngoingRide();
+  }, [captain._id]);
+
   useEffect(() => {
     const fetchCaptainLocation = () => {
       if (navigator.geolocation) {
@@ -81,21 +106,6 @@ const CaptainHome = () => {
     };
   }, [sendMessage, receiveMessage]);
 
-  const confirmRide = async () => {
-    try {
-      const response = await axios.post(
-        `${import.meta.env.VITE_BASE_URL}/api/rides/confirm`,
-        {
-          rideDetails,
-          captainDetails: captain,
-        },
-        { withCredentials: true }
-      );
-      // console.log(response);
-    } catch (error) {
-      console.log(error.message);
-    }
-  };
   useGSAP(() => {
     if (showRidePopupPanel) {
       gsap.to(ridePopupPanelRef.current, {
@@ -119,6 +129,55 @@ const CaptainHome = () => {
       });
     }
   }, [showConfirmRidePopupPanel]);
+  console.log(rideDetails);
+
+  const confirmRide = async () => {
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_BASE_URL}/api/rides/confirm`,
+        {
+          rideDetails,
+          captainDetails: captain,
+        },
+        { withCredentials: true }
+      );
+      // console.log(response);
+    } catch (error) {
+      console.log(error.message);
+    }
+  };
+  console.log(rideDetails);
+
+  // const handleCancelRide = async () => {
+  //   console.log(rideDetails?.captain);
+  //   try {
+  //     const response = await axios.post(
+  //       `${import.meta.env.VITE_BASE_URL}/api/rides/cancel-ride`,
+  //       { rideId: rideDetails._id, captainId: captain._id },
+  //       {
+  //         withCredentials: true,
+  //       }
+  //     );
+  //     console.log(response);
+  //     if (response.status === 200) {
+  //       setUserDetails(null);
+  //       navigate("/captain-home");
+  //     } else {
+  //       throw new Error("Failed to cancel ride");
+  //     }
+  //   } catch (error) {
+  //     console.error(error);
+  //   }
+  // };
+  const handleCancelRide = async () => {
+    sendMessage("ride-cancelled", {
+      rideId: rideDetails._id,
+      captainId: captain._id,
+      userSocketId: rideDetails.user.socketId,
+    });
+    setUserDetails(null);
+    navigate("/captain-home");
+  };
 
   return (
     <div className="h-screen">
@@ -139,6 +198,7 @@ const CaptainHome = () => {
         <LiveTrackingForCaptain
           captainLocation={captainLocation?.location}
           userLocation={userDetails?.location}
+          captain={captain}
         />
         {/* <LiveTracking captainDetails={captain} rideDetails={rideDetails} /> */}
       </div>
@@ -168,6 +228,8 @@ const CaptainHome = () => {
           setShowConfirmRidePopupPanel={setShowConfirmRidePopupPanel}
           setShowRidePopupPanel={setShowRidePopupPanel}
           rideDetails={rideDetails}
+          captain={captain}
+          handleCancelRide={handleCancelRide}
         />
       </div>
 

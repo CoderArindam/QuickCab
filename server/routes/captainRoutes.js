@@ -1,6 +1,7 @@
 import express from "express";
 import { body } from "express-validator";
 import {
+  checkCaptainStatus,
   getCaptainProfile,
   loginCaptain,
   logoutCaptain,
@@ -48,6 +49,7 @@ router.post(
 );
 
 router.get("/profile", authCaptain, getCaptainProfile);
+router.get("/check-ongoing-ride", authCaptain, checkCaptainStatus);
 
 router.get("/logout", authCaptain, logoutCaptain);
 export default router;

@@ -1,5 +1,3 @@
-// LiveTrackingForCaptain.jsx
-
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   LoadScript,
@@ -10,8 +8,15 @@ import {
 const LIBRARIES = ["marker"];
 const MAP_ID = "YOUR_MAP_ID";
 const GOOGLE_MAPS_API_KEY = "AIzaSyAePAVKBr8f9xvowy58CXJkG4xrx1j6SKA";
-const captainIconUrl =
-  "https://swyft.pl/wp-content/uploads/2023/05/how-many-people-can-a-uberx-take.jpg";
+
+// Vehicle-specific icons
+const vehicleIcons = {
+  car: "https://i.ibb.co/gDHxjmg/8d217b1000b642005fea7b6fd6c3d967.png",
+  motorcycle:
+    "https://www.uber-assets.com/image/upload/f_auto,q_auto:eco,c_fill,h_638,w_956/v1649231091/assets/2c/7fa194-c954-49b2-9c6d-a3b8601370f5/original/Uber_Moto_Orange_312x208_pixels_Mobile.png",
+  auto: "https://www.uber-assets.com/image/upload/f_auto,q_auto:eco,c_fill,h_368,w_552/v1648431773/assets/1d/db8c56-0204-4ce4-81ce-56a11a07fe98/original/Uber_Auto_558x372_pixels_Desktop.png",
+};
+const userIconUrl = "https://cdn-icons-png.flaticon.com/512/847/847969.png";
 
 const createImageMarkerContent = (imgUrl) => {
   const markerEl = document.createElement("div");
@@ -24,7 +29,25 @@ const createImageMarkerContent = (imgUrl) => {
   return markerEl;
 };
 
-const LiveTrackingForCaptain = ({ userLocation, captainLocation }) => {
+// Helper: Animate marker movement smoothly
+const animateMarker = (marker, oldLoc, newLoc, duration = 5000) => {
+  if (!marker || !oldLoc || !newLoc) return;
+
+  const steps = 60; // Frames for animation
+  let count = 0;
+  const latStep = (newLoc.lat - oldLoc.lat) / steps;
+  const lngStep = (newLoc.lng - oldLoc.lng) / steps;
+
+  const interval = setInterval(() => {
+    count++;
+    const lat = oldLoc.lat + latStep * count;
+    const lng = oldLoc.lng + lngStep * count;
+    marker.position = new window.google.maps.LatLng(lat, lng);
+    if (count === steps) clearInterval(interval);
+  }, duration / steps);
+};
+
+const LiveTrackingForCaptain = ({ userLocation, captainLocation, captain }) => {
   const [googleLoaded, setGoogleLoaded] = useState(false);
   const [map, setMap] = useState(null);
   const [directions, setDirections] = useState(null);
@@ -39,19 +62,25 @@ const LiveTrackingForCaptain = ({ userLocation, captainLocation }) => {
     setMap(mapInstance);
   }, []);
 
+  // Update the captain marker smoothly
   useEffect(() => {
-    if (!googleLoaded || !map) return;
+    if (!googleLoaded || !map || !captainLocation) return;
 
-    if (captainLocation) {
-      const captainEl = createImageMarkerContent(captainIconUrl);
+    const captainEl = createImageMarkerContent(
+      vehicleIcons[captain?.vehicle?.vehicleType] || vehicleIcons.car
+    );
+    if (!captainMarkerRef.current) {
       captainMarkerRef.current =
         new window.google.maps.marker.AdvancedMarkerElement({
           map,
           position: captainLocation,
           content: captainEl,
         });
-      setMapCenter(captainLocation);
+    } else {
+      const currentPosition = captainMarkerRef.current.position?.toJSON();
+      animateMarker(captainMarkerRef.current, currentPosition, captainLocation);
     }
+    setMapCenter(captainLocation);
 
     return () => {
       if (captainMarkerRef.current) {
@@ -59,21 +88,26 @@ const LiveTrackingForCaptain = ({ userLocation, captainLocation }) => {
         captainMarkerRef.current = null;
       }
     };
-  }, [googleLoaded, map, captainLocation]);
+  }, [googleLoaded, map, captainLocation, captain?.vehicle?.vehicleType]);
 
+  // Update the user marker
   useEffect(() => {
     if (!googleLoaded || !map || !userLocation) return;
 
-    const userEl = createImageMarkerContent(
-      "https://cdn-icons-png.flaticon.com/512/847/847969.png"
-    );
-    userMarkerRef.current = new window.google.maps.marker.AdvancedMarkerElement(
-      {
-        map,
-        position: userLocation,
-        content: userEl,
-      }
-    );
+    const userEl = createImageMarkerContent(userIconUrl);
+    if (!userMarkerRef.current) {
+      userMarkerRef.current =
+        new window.google.maps.marker.AdvancedMarkerElement({
+          map,
+          position: userLocation,
+          content: userEl,
+        });
+    } else {
+      userMarkerRef.current.position = new window.google.maps.LatLng(
+        userLocation.lat,
+        userLocation.lng
+      );
+    }
 
     return () => {
       if (userMarkerRef.current) {
@@ -83,6 +117,7 @@ const LiveTrackingForCaptain = ({ userLocation, captainLocation }) => {
     };
   }, [googleLoaded, map, userLocation]);
 
+  // Fetch directions and render the route
   useEffect(() => {
     if (!googleLoaded || !map || !captainLocation || !userLocation) return;
 

@@ -2,6 +2,7 @@ import { validationResult } from "express-validator";
 import { createCaptain } from "../services/captainService.js";
 import captainModel from "../models/captainModel.js";
 import blacklistedTokenModel from "../models/blacklistedTokenModel.js";
+import rideModel from "../models/rideModel.js";
 
 const registerCaptain = async (req, res, next) => {
   const errors = validationResult(req);
@@ -76,4 +77,39 @@ const logoutCaptain = async (req, res) => {
   res.clearCookie("token");
   return res.status(200).json({ message: "Logged out successfully" });
 };
-export { registerCaptain, loginCaptain, getCaptainProfile, logoutCaptain };
+
+const checkCaptainStatus = async (req, res) => {
+  try {
+    const { captainId } = req.query;
+
+    // Check captain's status
+    const captain = await captainModel.findById(captainId);
+    if (!captain || captain.status !== "riding") {
+      return res
+        .status(404)
+        .json({ message: "No ongoing ride for this captain." });
+    }
+
+    // Find ongoing ride for this captain
+    const ride = await rideModel
+      .findOne({ captain: captainId, status: "ongoing" })
+      .populate("user")
+      .populate("captain");
+
+    if (!ride) {
+      return res.status(404).json({ message: "No ongoing ride found." });
+    }
+
+    return res.status(200).json({ ride });
+  } catch (error) {
+    console.error("Error checking ongoing ride:", error);
+    res.status(500).json({ message: "Internal server error." });
+  }
+};
+export {
+  registerCaptain,
+  loginCaptain,
+  getCaptainProfile,
+  logoutCaptain,
+  checkCaptainStatus,
+};

@@ -31,6 +31,41 @@ export const initializeSocket = (server) => {
       }
     });
 
+    socket.on("ride-cancelled", async (data) => {
+      try {
+        const { rideId, captainId, userSocketId } = data;
+
+        const ride = await rideModel.findById(rideId);
+        if (!ride) {
+          return socket.emit("error", { message: "Ride not found" });
+        }
+        ride.status = "cancelled";
+
+        await ride.save();
+
+        const updatedCaptain = await captainModel.findOneAndUpdate(
+          { _id: captainId },
+          {
+            status: "active",
+          },
+          { new: true }
+        );
+
+        // Notify the user that the ride has been cancelled
+        if (userSocketId) {
+          io.to(userSocketId).emit("ride-cancelled", {
+            message: "Ride cancelled by captain",
+          });
+        }
+
+        socket.emit("ride-cancelled-success", {
+          message: "Ride cancelled successfully",
+        });
+      } catch (error) {
+        socket.emit("error", { message: "Server error", error });
+      }
+    });
+
     socket.on("update-user-location", async (data) => {
       console.log("data from update-user-location", data);
       try {
@@ -61,15 +96,19 @@ export const initializeSocket = (server) => {
         console.error("Error updating user location:", error);
       }
     });
-
     socket.on("update-captain-location", async (data) => {
       try {
         const { userId, location } = data;
+
         if (location?.lat && location?.lng) {
-          // Find the most recent ongoing ride for the captain
+          // Step 1: Update the captain's location in the database
+          await captainModel.findByIdAndUpdate(userId, {
+            location: { lat: location.lat, lng: location.lng },
+          });
+
+          // Step 2: Check for an ongoing ride and emit the location to the user if applicable
           const ride = await rideModel
             .findOne({ captain: userId, status: "ongoing" })
-
             .populate("user");
 
           if (ride?.user?.socketId) {
@@ -78,6 +117,7 @@ export const initializeSocket = (server) => {
               ride.user.socketId,
               location
             );
+
             io.to(ride.user.socketId).emit("update-captain-location", {
               location,
             });

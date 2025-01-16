@@ -11,6 +11,7 @@ import {
 import { validationResult } from "express-validator";
 import { sendMessageToSocketId } from "../socket.js";
 import rideModel from "../models/rideModel.js";
+import captainModel from "../models/captainModel.js";
 
 const createRide = async (req, res) => {
   const errors = validationResult(req);
@@ -18,10 +19,11 @@ const createRide = async (req, res) => {
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
   }
+
   const { pickup, destination, vehicleType } = req.body;
-  //   console.log(pickup, destination, vehicleType);
 
   try {
+    // Step 1: Create the ride
     const ride = await createRideService({
       user: req.user._id,
       pickup,
@@ -31,25 +33,44 @@ const createRide = async (req, res) => {
 
     res.status(201).json(ride);
 
+    // Step 2: Get pickup coordinates
     const pickupCoordinates = await getAddressCoordinate(pickup);
+
+    // Step 3: Find captains in the radius
     const captainsInRadius = await getCaptainsInTheRadius(
       pickupCoordinates.lat,
       pickupCoordinates.lng,
       30
     );
 
-    console.log("found captains", captainsInRadius);
-    ride.otp = "";
+    console.log("Captains in the radius:", captainsInRadius);
 
-    const rideWithUser = await rideModel.findOne(ride._id).populate("user");
-    captainsInRadius.map(async (captain) => {
-      sendMessageToSocketId(captain.socketId, {
-        event: "new-ride",
-        data: rideWithUser,
-      });
+    // Step 4: Filter active captains
+    const activeCaptains = captainsInRadius.filter(
+      (captain) => captain.status === "active"
+    );
+
+    console.log("Active captains:", activeCaptains);
+
+    // Step 5: Populate ride with user details
+    const rideWithUser = await rideModel
+      .findOne({ _id: ride._id })
+      .populate("user");
+
+    // Step 6: Notify active captains about the new ride
+    activeCaptains.forEach((captain) => {
+      if (!captain.socketId) {
+        console.warn(`Captain ${captain._id} has no socketId.`);
+      } else {
+        sendMessageToSocketId(captain.socketId, {
+          event: "new-ride",
+          data: rideWithUser,
+        });
+      }
     });
   } catch (error) {
-    return res.status(500).json({ message: "internal server error" });
+    console.error("Error in createRide:", error.message);
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
 
@@ -79,6 +100,31 @@ const confirmRide = async (req, res) => {
   }
 };
 
+const cancelRide = async (req, res) => {
+  try {
+    const { rideId, captainId } = req.body;
+
+    const ride = await rideModel.findById(rideId);
+    if (!ride) {
+      return res.status(404).json({ message: "Ride not found" });
+    }
+    ride.status = "cancelled";
+
+    await ride.save();
+
+    const updatedCaptain = await captainModel.findOneAndUpdate(
+      { _id: captainId },
+      {
+        status: "active",
+      },
+      { new: true }
+    );
+    res.status(200).json({ message: "Ride cancelled successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error });
+  }
+};
+
 const startRide = async (req, res) => {
   const errors = validationResult(req);
 
@@ -94,6 +140,25 @@ const startRide = async (req, res) => {
   }
 };
 
+const checkRideStatus = async (req, res) => {
+  const { rideId } = req.body;
+
+  if (!rideId) {
+    return res.status(400).json({ message: "Ride ID not found" });
+  }
+
+  try {
+    const ride = await rideModel.findById(rideId);
+    if (!ride) {
+      return res.status(404).json({ message: "Ride not found" });
+    }
+
+    const isCancelled = ride.status === "cancelled";
+    return res.status(200).json({ ride, isCancelled });
+  } catch (error) {
+    return res.status(500).json({ message: "Server error", error });
+  }
+};
 const getCaptainLocation = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -115,20 +180,11 @@ const getCaptainLocation = async (req, res) => {
   }
 };
 
-const cancelRide = async (req, res) => {
-  try {
-    const { rideId } = req.body;
-    // Logic to cancel the ride
-    // Assuming you have a Ride model
-    const ride = await rideModel.findById(rideId);
-    if (!ride) {
-      return res.status(404).json({ message: "Ride not found" });
-    }
-    ride.status = "cancelled";
-    await ride.save();
-    res.status(200).json({ message: "Ride cancelled successfully" });
-  } catch (error) {
-    res.status(500).json({ message: "Server error", error });
-  }
+export {
+  createRide,
+  confirmRide,
+  startRide,
+  getCaptainLocation,
+  cancelRide,
+  checkRideStatus,
 };
-export { createRide, confirmRide, startRide, getCaptainLocation, cancelRide };

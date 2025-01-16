@@ -99,6 +99,25 @@ const Home = () => {
   }, [sendMessage, user._id, receiveMessage]);
 
   useEffect(() => {
+    // Listen for ride cancellation
+    receiveMessage("ride-cancelled", () => {
+      setRideDetails(null);
+      setCaptainDetails(null);
+      setShowWaitingForDriver(false);
+      setVehicleFound(false);
+      setShowLookingForDriver(false);
+      setShowConfirmRidePanel(false);
+      setshowVehiclePanel(false);
+      setFoundTrip(false);
+    });
+
+    // Cleanup listener on unmount
+    return () => {
+      socket.off("ride-cancelled");
+    };
+  }, [receiveMessage, socket]);
+
+  useEffect(() => {
     // Join the user to the socket room
     sendMessage("join", {
       userType: "user",
@@ -320,6 +339,7 @@ const Home = () => {
       <LiveTrackingForUser
         captainLocation={captainDetails?.location}
         userLocation={userLocation?.location}
+        captainDetails={captainDetails}
       />
       {/* image for temporary use  */}
 
