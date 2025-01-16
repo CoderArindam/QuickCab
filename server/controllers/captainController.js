@@ -33,6 +33,12 @@ const registerCaptain = async (req, res, next) => {
       vehicleType
     );
     const token = captain.generateAuthToken();
+    res.cookie("token", token, {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+      maxAge: 24 * 60 * 60 * 1000, // 1 day
+    });
     return res.status(201).json({ token, captain });
   } catch (error) {
     return res.status(500).json({ message: error.message });
