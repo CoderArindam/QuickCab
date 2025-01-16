@@ -19,6 +19,7 @@ import { SocketContext } from "../../context/SocketContext";
 import { UserDataContext } from "../../context/UserContext";
 import { useNavigate } from "react-router-dom";
 import LiveTracking from "../../components/tracking/LiveTracking";
+import LiveTrackingForUser from "../../components/tracking/LiveTrackingForUser";
 
 const Home = () => {
   const [pickup, setPickup] = useState();
@@ -43,8 +44,9 @@ const Home = () => {
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [confirmedRideDetails, setConfirmRideDetails] = useState({});
   const [loading, setLoading] = useState(false);
-  const { sendMessage, receiveMessage } = useContext(SocketContext);
+  const { sendMessage, receiveMessage, socket } = useContext(SocketContext);
   const [captainDetails, setCaptainDetails] = useState();
+  const [userLocation, setUserLocation] = useState();
   const { user } = useContext(UserDataContext);
   const [rideDetails, setRideDetails] = useState();
   const [foundTrip, setFoundTrip] = useState();
@@ -57,6 +59,17 @@ const Home = () => {
         navigator.geolocation.getCurrentPosition(
           async (position) => {
             const { latitude, longitude } = position.coords;
+            console.log("Sending user location:", {
+              lat: latitude,
+              lng: longitude,
+            });
+
+            setUserLocation({ location: { lat: latitude, lng: longitude } });
+            sendMessage("update-user-location", {
+              userId: user._id,
+              location: { lat: latitude, lng: longitude },
+            });
+
             try {
               const response = await axios.get(
                 `${import.meta.env.VITE_BASE_URL}/api/maps/current-location`,
@@ -65,7 +78,7 @@ const Home = () => {
                   withCredentials: true,
                 }
               );
-              setPickup(response.data.location); // Set the pickup location to the address
+              setPickup(response.data.location);
             } catch (error) {
               console.error("Error fetching user's location:", error);
             }
@@ -75,12 +88,15 @@ const Home = () => {
           }
         );
       } else {
-        alert("Geolocation is not supported by your browser.");
+        console.error("Geolocation is not supported by this browser.");
       }
     };
 
-    fetchUserLocation();
-  }, []);
+    const intervalId = setInterval(fetchUserLocation, 10000); // Fetch every 10 seconds
+    fetchUserLocation(); // Initial fetch
+
+    return () => clearInterval(intervalId); // Cleanup on unmount
+  }, [sendMessage, user._id, receiveMessage]);
 
   useEffect(() => {
     // Join the user to the socket room
@@ -111,14 +127,16 @@ const Home = () => {
 
     // Listen for captain location updates
     receiveMessage("update-captain-location", (data) => {
-      console.log("Captain Location Updated:", data);
       setCaptainDetails((prevDetails) => ({
         ...prevDetails,
-        location: data.location, // Update the location field
+        location: data.location,
       }));
     });
-    console.log("updated driver location", captainDetails);
-    // Cleanup on unmount
+    // Cleanup listeners on unmount
+    console.log("Captain location update received:", captainDetails); // Debug log
+    return () => {
+      socket.off("update-captain-location");
+    };
   }, [sendMessage, receiveMessage]);
 
   useGSAP(() => {
@@ -286,7 +304,6 @@ const Home = () => {
     }
   };
 
-  console.log(confirmedRideDetails);
   return (
     <div className="h-screen relative overflow-hidden">
       <img
@@ -300,7 +317,10 @@ const Home = () => {
           className="h-full w-full object-cover "
           alt=""
         /> */}
-      <LiveTracking captainDetails={captainDetails} rideDetails={rideDetails} />
+      <LiveTrackingForUser
+        captainLocation={captainDetails?.location}
+        userLocation={userLocation?.location}
+      />
       {/* image for temporary use  */}
 
       <div
@@ -308,7 +328,7 @@ const Home = () => {
           foundTrip ? "hidden" : "flex"
         }`}
       >
-        <div className="h-[40vh] p-6 bg-white relative">
+        <div className="h-[30%] p-6 bg-white relative">
           <h5
             ref={panelCloseRef}
             onClick={() => setPanelOpen(false)}

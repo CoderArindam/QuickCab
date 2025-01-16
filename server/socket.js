@@ -1,6 +1,7 @@
 import { Server } from "socket.io";
 import userModel from "./models/userModel.js";
 import captainModel from "./models/captainModel.js";
+import rideModel from "./models/rideModel.js";
 
 let io;
 
@@ -30,24 +31,64 @@ export const initializeSocket = (server) => {
       }
     });
 
+    socket.on("update-user-location", async (data) => {
+      console.log("data from update-user-location", data);
+      try {
+        const { userId, location } = data;
+        if (location?.lat && location?.lng) {
+          // Find the most recent ongoing ride for the user
+          const ride = await rideModel
+            .findOne({ user: userId, status: "ongoing" })
+            .sort({ updatedAt: -1 }) // Sort by the most recently updated ride
+            .populate("captain");
+
+          if (ride?.captain?.socketId) {
+            console.log(
+              "Emitting user location to captain:",
+              ride.captain.socketId,
+              location
+            );
+            io.to(ride.captain.socketId).emit("update-user-location", {
+              location,
+            });
+          } else {
+            console.log("No ongoing ride or captain found for the user.");
+          }
+        } else {
+          console.error("Invalid location data:", data);
+        }
+      } catch (error) {
+        console.error("Error updating user location:", error);
+      }
+    });
+
     socket.on("update-captain-location", async (data) => {
       try {
         const { userId, location } = data;
-        if (!location || !location.lat || !location.lng) {
-          return socket.emit("error", { message: "invalid location data" });
-        }
-        const result = await captainModel.findOneAndUpdate(
-          { _id: userId },
-          {
-            location: {
-              lat: location.lat,
-              lng: location.lng,
-            },
+        if (location?.lat && location?.lng) {
+          // Find the most recent ongoing ride for the captain
+          const ride = await rideModel
+            .findOne({ captain: userId, status: "ongoing" })
+
+            .populate("user");
+
+          if (ride?.user?.socketId) {
+            console.log(
+              "Emitting captain location to user:",
+              ride.user.socketId,
+              location
+            );
+            io.to(ride.user.socketId).emit("update-captain-location", {
+              location,
+            });
+          } else {
+            console.log("No ongoing ride or user found for the captain.");
           }
-        );
-        // console.log(result);
+        } else {
+          console.error("Invalid location data:", data);
+        }
       } catch (error) {
-        console.log(error.message);
+        console.error("Error updating captain location:", error);
       }
     });
 

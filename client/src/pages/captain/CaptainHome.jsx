@@ -9,29 +9,30 @@ import { CaptainDataContext } from "../../context/CaptainContext";
 import { SocketContext } from "../../context/SocketContext";
 import axios from "axios";
 import LiveTracking from "../../components/tracking/LiveTracking";
+import LiveTrackingForCaptain from "../../components/tracking/LiveTrackingForCaptain";
 const CaptainHome = () => {
   const [showRidePopupPanel, setShowRidePopupPanel] = useState(false);
   const ridePopupPanelRef = useRef(null);
   const { captain } = useContext(CaptainDataContext);
   const { sendMessage, receiveMessage, socket } = useContext(SocketContext);
+  const [userDetails, setUserDetails] = useState();
+  const [captainLocation, setCaptainLocation] = useState();
 
   const [showConfirmRidePopupPanel, setShowConfirmRidePopupPanel] =
     useState(false);
   const confrimRidePopupPanelRef = useRef(null);
   const [rideDetails, setRideDetails] = useState({});
   useEffect(() => {
-    // Join the socket room
-    sendMessage("join", {
-      userType: "captain",
-      userId: captain._id,
-    });
-
-    // Function to fetch the captain's current location
-    const fetchLocationAndSend = () => {
+    const fetchCaptainLocation = () => {
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
           (position) => {
             const { latitude, longitude } = position.coords;
+            console.log("Sending captain location:", {
+              lat: latitude,
+              lng: longitude,
+            });
+            setCaptainLocation({ location: { lat: latitude, lng: longitude } });
 
             sendMessage("update-captain-location", {
               userId: captain._id,
@@ -47,19 +48,38 @@ const CaptainHome = () => {
       }
     };
 
-    // Interval to send location updates every 10 seconds
-    const intervalId = setInterval(fetchLocationAndSend, 10000);
-    fetchLocationAndSend();
+    const intervalId = setInterval(fetchCaptainLocation, 10000); // Fetch every 10 seconds
+    fetchCaptainLocation(); // Initial fetch
 
-    // Cleanup interval on component unmount
-    return () => clearInterval(intervalId);
-  }, []);
+    return () => clearInterval(intervalId); // Cleanup on unmount
+  }, [sendMessage, captain._id]);
 
-  receiveMessage("new-ride", (data) => {
-    setRideDetails(data);
+  useEffect(() => {
+    // Join the socket room
+    sendMessage("join", {
+      userType: "captain",
+      userId: captain._id,
+    });
 
-    setShowRidePopupPanel(true);
-  });
+    receiveMessage("new-ride", (data) => {
+      setRideDetails(data);
+      setShowRidePopupPanel(true);
+    });
+
+    // Listen for user location updates
+    receiveMessage("update-user-location", (data) => {
+      console.log("User location update received:", data); // Debug log
+      setUserDetails((prevDetails) => ({
+        ...prevDetails,
+        location: data.location,
+      }));
+    });
+
+    // Cleanup listeners on unmount
+    return () => {
+      socket.off("update-user-location");
+    };
+  }, [sendMessage, receiveMessage]);
 
   const confirmRide = async () => {
     try {
@@ -71,7 +91,7 @@ const CaptainHome = () => {
         },
         { withCredentials: true }
       );
-      console.log(response);
+      // console.log(response);
     } catch (error) {
       console.log(error.message);
     }
@@ -116,7 +136,11 @@ const CaptainHome = () => {
         </Link>
       </div>
       <div className="h-3/5">
-        <LiveTracking captainDetails={captain} rideDetails={rideDetails} />
+        <LiveTrackingForCaptain
+          captainLocation={captainLocation?.location}
+          userLocation={userDetails?.location}
+        />
+        {/* <LiveTracking captainDetails={captain} rideDetails={rideDetails} /> */}
       </div>
       <div className="h-2/5 p-6">
         <CaptainDetails captain={captain} />

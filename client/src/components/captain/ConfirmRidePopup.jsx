@@ -28,6 +28,25 @@ const ConfirmRidePopup = ({
       throw new Error("invalid otp");
     }
   };
+  const handleCancelRide = async () => {
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_BASE_URL}/api/rides/cancel-ride`,
+        { rideId: rideDetails._id },
+        {
+          withCredentials: true,
+        }
+      );
+      console.log(response);
+      if (response.status === 200) {
+        navigate("/captain-home");
+      } else {
+        throw new Error("Failed to cancel ride");
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
   return (
     <div>
       <h5
@@ -98,6 +117,7 @@ const ConfirmRidePopup = ({
                 setShowConfirmRidePopupPanel(false);
                 setShowRidePopupPanel(false);
                 e.preventDefault();
+                handleCancelRide();
               }}
             >
               Cancel

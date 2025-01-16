@@ -5,8 +5,6 @@ const RidePopup = ({
   setRideDetails,
   confirmRide,
 }) => {
-  console.log(rideDetails);
-
   const { pickup, destination, fare, user } = rideDetails || {};
   const { fullName } = user || {};
 

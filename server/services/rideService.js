@@ -104,7 +104,7 @@ const confirmRideService = async ({ rideId, captainDetails }) => {
     const updatedRide = await rideModel.findOneAndUpdate(
       { _id: rideId },
       {
-        status: "accepted",
+        status: "ongoing",
         captain: captainDetails._id,
       },
       { new: true }

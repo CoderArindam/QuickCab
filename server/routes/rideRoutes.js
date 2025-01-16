@@ -1,6 +1,7 @@
 import express from "express";
 import { body, param } from "express-validator";
 import {
+  cancelRide,
   confirmRide,
   createRide,
   getCaptainLocation,
@@ -43,7 +44,13 @@ router.post(
   body("otp").isLength({ min: 6 }).withMessage("invalid otp"),
   startRide
 );
-
+// Cancel ride
+router.post(
+  "/cancel-ride",
+  authCaptain,
+  body("rideId").isMongoId().withMessage("invalid ride id"),
+  cancelRide
+);
 // GET captain location
 router.get(
   "/:rideId/captain/:captainId/location",

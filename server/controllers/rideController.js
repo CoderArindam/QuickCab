@@ -114,4 +114,21 @@ const getCaptainLocation = async (req, res) => {
     return res.status(400).json({ message: error.message });
   }
 };
-export { createRide, confirmRide, startRide, getCaptainLocation };
+
+const cancelRide = async (req, res) => {
+  try {
+    const { rideId } = req.body;
+    // Logic to cancel the ride
+    // Assuming you have a Ride model
+    const ride = await rideModel.findById(rideId);
+    if (!ride) {
+      return res.status(404).json({ message: "Ride not found" });
+    }
+    ride.status = "cancelled";
+    await ride.save();
+    res.status(200).json({ message: "Ride cancelled successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error });
+  }
+};
+export { createRide, confirmRide, startRide, getCaptainLocation, cancelRide };
