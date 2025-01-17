@@ -66,6 +66,49 @@ export const initializeSocket = (server) => {
       }
     });
 
+    socket.on("ride-cancelled-by-user", async (data) => {
+      try {
+        const { rideId, userId, captainSocketId } = data;
+
+        const ride = await rideModel.findById(rideId);
+        if (!ride) {
+          return socket.emit("error", { message: "Ride not found" });
+        }
+        ride.status = "cancelled";
+
+        await ride.save();
+
+        // const updatedUser = await userModel.findOneAndUpdate(
+        //   { _id: userId },
+        //   {
+        //   status: "active",
+        //   },
+        //   { new: true }
+        // );
+
+        const updatedCaptain = await captainModel.findOneAndUpdate(
+          { _id: ride.captain },
+          {
+            status: "active",
+          },
+          { new: true }
+        );
+
+        // Notify the captain that the ride has been cancelled
+        if (captainSocketId) {
+          io.to(captainSocketId).emit("ride-cancelled-by-user", {
+            message: "Ride cancelled by user",
+          });
+        }
+
+        socket.emit("ride-cancelled-success", {
+          message: "Ride cancelled successfully",
+        });
+      } catch (error) {
+        socket.emit("error", { message: "Server error", error });
+      }
+    });
+
     socket.on("update-user-location", async (data) => {
       console.log("data from update-user-location", data);
       try {

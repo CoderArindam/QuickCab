@@ -99,8 +99,7 @@ const LiveTracking = ({ captainDetails, rideDetails }) => {
   // Fake IDs to pass to fetchUpdatedCaptainLocation
   const rideId = rideDetails?._id || "some-ride-id";
   const captainId = captainDetails?._id || "some-captain-id";
-
-  const GOOGLE_MAPS_API_KEY = "AIzaSyAePAVKBr8f9xvowy58CXJkG4xrx1j6SKA";
+  const GOOGLE_MAPS_API_KEY = `${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}`;
 
   const onMapLoad = useCallback((mapInstance) => {
     setMap(mapInstance);

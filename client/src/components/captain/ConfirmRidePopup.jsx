@@ -8,7 +8,6 @@ const ConfirmRidePopup = ({
   rideDetails,
   handleCancelRide,
 }) => {
-  console.log(rideDetails);
   const { pickup, destination, fare, user } = rideDetails || {};
   const { fullName } = user || {};
   const [otp, setOtp] = useState();

@@ -1,9 +1,13 @@
 import React from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import RazorpayPayment from "../../components/payment/RazorpayPayment";
 
 const Riding = () => {
   const location = useLocation();
+  const navigate = useNavigate(); // Initialize useNavigate
   const { ride } = location.state || {};
+  console.log(ride);
+
   const vehicleImages = {
     car: "https://swyft.pl/wp-content/uploads/2023/05/how-many-people-can-a-uberx-take.jpg",
     moto: "https://www.uber-assets.com/image/upload/f_auto,q_auto:eco,c_fill,h_638,w_956/v1649231091/assets/2c/7fa194-c954-49b2-9c6d-a3b8601370f5/original/Uber_Moto_Orange_312x208_pixels_Mobile.png",
@@ -11,6 +15,12 @@ const Riding = () => {
   };
 
   const vehicleImage = vehicleImages[ride?.vehicleType] || vehicleImages["car"];
+
+  // Function to handle successful payment and redirect to captain-home
+  const handlePaymentSuccess = () => {
+    // Redirect to captain-home after successful payment
+    navigate("/home");
+  };
 
   return (
     <div className="h-screen">
@@ -70,9 +80,16 @@ const Riding = () => {
           </div>
         </div>
 
-        <button className="w-full mt-5 bg-green-600 text-white font-semibold p-2 rounded-lg">
-          Make a Payment
-        </button>
+        {/* Display the RazorpayPayment component directly */}
+        <RazorpayPayment
+          rideId={ride._id}
+          amount={ride.fare}
+          userContact={"0000"}
+          userEmail={ride.user.email}
+          userName={ride.user.fullName.firstName}
+          key={ride._id}
+          onPaymentSuccess={handlePaymentSuccess} // Pass the success handler to RazorpayPayment
+        />
       </div>
     </div>
   );

@@ -3,6 +3,7 @@ import { createUser } from "../services/userService.js";
 import { validationResult } from "express-validator";
 import blacklistedTokenModel from "../models/blacklistedTokenModel.js";
 import { getFare } from "../services/rideService.js";
+import rideModel from "../models/rideModel.js";
 
 const registerUser = async (req, res, next) => {
   const errors = validationResult(req);
@@ -83,10 +84,31 @@ const calculateFareForUser = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+const checkOngoingRide = async (req, res, next) => {
+  const userId = req.params.userId;
+
+  try {
+    const ongoingRide = await rideModel
+      .findOne({ userId, status: "ongoing" })
+      .populate("captain")
+      .populate("user");
+
+    if (!ongoingRide) {
+      return res.status(404).json({ message: "No ongoing ride found" });
+    }
+
+    return res.status(200).json(ongoingRide);
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
 export {
   registerUser,
   loginUser,
   getUserProfile,
   logoutUser,
   calculateFareForUser,
+  checkOngoingRide,
 };

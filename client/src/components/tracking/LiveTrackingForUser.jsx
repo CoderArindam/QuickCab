@@ -7,7 +7,7 @@ import {
 
 const LIBRARIES = ["marker"];
 const MAP_ID = "YOUR_MAP_ID";
-const GOOGLE_MAPS_API_KEY = "AIzaSyAePAVKBr8f9xvowy58CXJkG4xrx1j6SKA";
+const GOOGLE_MAPS_API_KEY = `${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}`;
 
 // Vehicle-specific icons
 const vehicleIcons = {
@@ -16,7 +16,8 @@ const vehicleIcons = {
     "https://www.uber-assets.com/image/upload/f_auto,q_auto:eco,c_fill,h_638,w_956/v1649231091/assets/2c/7fa194-c954-49b2-9c6d-a3b8601370f5/original/Uber_Moto_Orange_312x208_pixels_Mobile.png",
   auto: "https://www.uber-assets.com/image/upload/f_auto,q_auto:eco,c_fill,h_368,w_552/v1648431773/assets/1d/db8c56-0204-4ce4-81ce-56a11a07fe98/original/Uber_Auto_558x372_pixels_Desktop.png",
 };
-const userIconUrl = "https://cdn-icons-png.flaticon.com/512/847/847969.png";
+const userIconUrl =
+  "https://static.vecteezy.com/system/resources/previews/024/514/523/non_2x/people-3d-icon-free-png.png";
 
 const createImageMarkerContent = (imgUrl) => {
   const markerEl = document.createElement("div");
@@ -68,7 +69,10 @@ const LiveTrackingForUser = ({
 
   // Fetch directions
   useEffect(() => {
-    if (!captainLocation || !userLocation || !googleLoaded) return;
+    if (!captainLocation || !userLocation || !googleLoaded) {
+      setDirections(null);
+      return;
+    }
 
     const directionsService = new window.google.maps.DirectionsService();
     directionsService.route(

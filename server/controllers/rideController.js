@@ -134,6 +134,7 @@ const startRide = async (req, res) => {
   const { rideId, otp } = req.body;
   try {
     const ride = await startRideService(rideId, otp);
+    console.log(ride);
     return res.status(200).json(ride);
   } catch (error) {
     console.log(error.message);

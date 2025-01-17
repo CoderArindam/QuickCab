@@ -2,6 +2,7 @@ import express from "express";
 import { body } from "express-validator";
 import {
   calculateFareForUser,
+  checkOngoingRide,
   getUserProfile,
   loginUser,
   logoutUser,
@@ -34,7 +35,7 @@ router.post(
   ],
   loginUser
 );
-
+router.get("/check-ongoing-ride", authUser, checkOngoingRide);
 router.get("/profile", authUser, getUserProfile);
 router.get("/get-fare", authUser, calculateFareForUser);
 router.get("/logout", authUser, logoutUser);

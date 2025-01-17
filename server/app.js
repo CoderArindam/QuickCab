@@ -6,6 +6,7 @@ import userRoutes from "./routes/userRoutes.js";
 import mapRoutes from "./routes/mapRoutes.js";
 import captainRoutes from "./routes/captainRoutes.js";
 import rideRoutes from "./routes/rideRoutes.js";
+import paymentRoutes from "./routes/paymentRoutes.js";
 import cookieParser from "cookie-parser";
 
 dotenv.config();
@@ -24,7 +25,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/captains", captainRoutes);
 app.use("/api/maps", mapRoutes);
 app.use("/api/rides", rideRoutes);
-
+app.use("/api/payment", paymentRoutes);
 app.get("/", (req, res) => {
   res.send("Hello World!");
 });

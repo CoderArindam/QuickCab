@@ -6,6 +6,7 @@ const WaitingForDriver = ({
   vehicleFound,
   confirmedRideDetails,
   captainDetails,
+  handleCancelRide,
 }) => {
   const { pickup, destination, otp, fare, vehicleType } =
     confirmedRideDetails || {};
@@ -75,6 +76,14 @@ const WaitingForDriver = ({
             </div>
           </div>
         </div>
+      </div>
+      <div className="cancel-button">
+        <button
+          className="p-4 bg-red-700 cursor-pointer text-white"
+          onClick={(e) => handleCancelRide(e)}
+        >
+          Cancel Ride
+        </button>
       </div>
     </div>
   );

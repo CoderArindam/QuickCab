@@ -53,10 +53,10 @@ const CaptainHome = () => {
         navigator.geolocation.getCurrentPosition(
           (position) => {
             const { latitude, longitude } = position.coords;
-            console.log("Sending captain location:", {
-              lat: latitude,
-              lng: longitude,
-            });
+            // console.log("Sending captain location:", {
+            //   lat: latitude,
+            //   lng: longitude,
+            // });
             setCaptainLocation({ location: { lat: latitude, lng: longitude } });
 
             sendMessage("update-captain-location", {
@@ -100,6 +100,14 @@ const CaptainHome = () => {
       }));
     });
 
+    receiveMessage("ride-cancelled-by-user", (data) => {
+      console.log(data);
+      setShowRidePopupPanel(false);
+      setShowConfirmRidePopupPanel(false);
+      setRideDetails({});
+      setUserDetails(null);
+    });
+
     // Cleanup listeners on unmount
     return () => {
       socket.off("update-user-location");
@@ -129,7 +137,6 @@ const CaptainHome = () => {
       });
     }
   }, [showConfirmRidePopupPanel]);
-  console.log(rideDetails);
 
   const confirmRide = async () => {
     try {
@@ -141,12 +148,14 @@ const CaptainHome = () => {
         },
         { withCredentials: true }
       );
+      sendMessage("ride-accepted", {
+        userSocketId: rideDetails.user.socketId,
+      });
       // console.log(response);
     } catch (error) {
       console.log(error.message);
     }
   };
-  console.log(rideDetails);
 
   // const handleCancelRide = async () => {
   //   console.log(rideDetails?.captain);

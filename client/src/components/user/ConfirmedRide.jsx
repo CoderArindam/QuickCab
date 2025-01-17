@@ -7,6 +7,8 @@ const ConfirmedRide = ({
   destination,
   fare,
   handleConfirmRide,
+  loading,
+  setLoading,
 }) => {
   // Vehicle images mapping
   const vehicleImages = {
@@ -51,13 +53,18 @@ const ConfirmedRide = ({
         </div>
         <button
           onClick={() => {
-            setVehicleFound(true);
-            setShowConfirmRidePanel(false);
             handleConfirmRide(true);
           }}
-          className="w-full mt-5 bg-green-600 text-white font-semibold p-2 rounded-lg"
+          className={`w-full mt-5 bg-green-600 text-white font-semibold p-2 rounded-lg flex items-center justify-center ${
+            loading ? "opacity-50 cursor-not-allowed" : ""
+          }`}
+          disabled={loading}
         >
-          Confirm
+          {loading ? (
+            <i className="ri-loader-4-line animate-spin text-xl"></i>
+          ) : (
+            "Confirm"
+          )}
         </button>
       </div>
     </div>

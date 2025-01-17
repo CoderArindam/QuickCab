@@ -98,6 +98,36 @@ const Home = () => {
     return () => clearInterval(intervalId); // Cleanup on unmount
   }, [sendMessage, user._id, receiveMessage]);
 
+  // Fetch ongoing ride on reload
+  useEffect(() => {
+    const fetchOngoingRide = async () => {
+      try {
+        const response = await axios.get(
+          `${import.meta.env.VITE_BASE_URL}/api/users/check-ongoing-ride`,
+          { params: { userId: user._id }, withCredentials: true }
+        );
+        const data = response.data;
+        console.log(data);
+        if (data) {
+          setFoundTrip(true);
+          setConfirmRideDetails(data);
+          setShowWaitingForDriver(true);
+        } else {
+          setFoundTrip(false);
+          setConfirmRideDetails(null);
+          setShowWaitingForDriver(false);
+        }
+      } catch (error) {
+        setFoundTrip(false);
+        setRideDetails(null);
+        setShowWaitingForDriver(false);
+        console.error("Error fetching ongoing ride:", error.message);
+      }
+    };
+
+    fetchOngoingRide();
+  }, []);
+
   useEffect(() => {
     // Listen for ride cancellation
     receiveMessage("ride-cancelled", () => {
@@ -130,7 +160,7 @@ const Home = () => {
       setShowLookingForDriver(false);
       setShowWaitingForDriver(true);
       setCaptainDetails(data.captain);
-      setRideDetails(data);
+      setConfirmRideDetails(data);
     });
 
     // Listen for ride start
@@ -153,6 +183,7 @@ const Home = () => {
     });
     // Cleanup listeners on unmount
     console.log("Captain location update received:", captainDetails); // Debug log
+
     return () => {
       socket.off("update-captain-location");
     };
@@ -234,6 +265,20 @@ const Home = () => {
     }
   }, [showWaitingForDriver]);
 
+  useGSAP(() => {
+    if (showLookingForDriver) {
+      gsap.to(lookingForDriverRef.current, {
+        transform: "translateY(0)",
+        duration: 0.5,
+      });
+    } else {
+      gsap.to(lookingForDriverRef.current, {
+        transform: "translateY(100%)",
+        duration: 0.5,
+      });
+    }
+  }, [showLookingForDriver]);
+
   // Debounced function to fetch location suggestions
   const fetchSuggestions = async (input) => {
     setLoading(true);
@@ -281,6 +326,7 @@ const Home = () => {
   const submitHandler = async (e) => {
     e.preventDefault();
     if (pickup && destination) {
+      setLoading(true);
       const response = await axios.get(
         `${import.meta.env.VITE_BASE_URL}/api/users/get-fare`,
         {
@@ -292,7 +338,9 @@ const Home = () => {
         }
       );
       const data = response.data;
+
       setFare(data);
+      setLoading(false);
       setshowVehiclePanel(true);
       setPanelOpen(false);
     } else {
@@ -303,6 +351,7 @@ const Home = () => {
   const handleConfirmRide = async (boolean) => {
     if (boolean) {
       try {
+        setLoading(true);
         const response = await axios.post(
           `${import.meta.env.VITE_BASE_URL}/api/rides/create`,
           {
@@ -315,12 +364,34 @@ const Home = () => {
           }
         );
         const data = response.data;
+
         setConfirmRideDetails(data);
+        setVehicleFound(true);
+        setShowConfirmRidePanel(false);
         setFoundTrip(true);
+        setShowLookingForDriver(true);
+        setLoading(false);
       } catch (error) {
+        setShowLookingForDriver(false);
+        setFoundTrip(true);
+        setFoundTrip(true);
         console.log(error.message);
       }
     }
+  };
+
+  const handleCancelRide = async (e) => {
+    e.preventDefault();
+    sendMessage("ride-cancelled-by-user", {
+      rideId: confirmedRideDetails?._id,
+      captainSocketId: confirmedRideDetails?.captain?.socketId,
+    });
+
+    setShowWaitingForDriver(false);
+    setShowLookingForDriver(false);
+    setConfirmRideDetails();
+    setCaptainDetails();
+    setFoundTrip(false);
   };
 
   return (
@@ -331,11 +402,6 @@ const Home = () => {
         alt=""
       />
 
-      {/* <img
-          src="https://i.ibb.co/kQsFscG/Screenshot-2025-01-06-180735.png"
-          className="h-full w-full object-cover "
-          alt=""
-        /> */}
       <LiveTrackingForUser
         captainLocation={captainDetails?.location}
         userLocation={userLocation?.location}
@@ -388,10 +454,15 @@ const Home = () => {
               onChange={(e) => handleInputChange(e, "destination")}
             />
             <button
-              className="bg-black text-white px-4 py-2 rounded-lg mt-3 w-full"
+              className="bg-black text-white px-4 py-2 rounded-lg mt-3 w-full flex items-center justify-center"
               type="submit"
+              disabled={loading}
             >
-              Find Trip
+              {loading ? (
+                <i className="ri-loader-4-line animate-spin text-xl"></i>
+              ) : (
+                "Find Trip"
+              )}
             </button>
           </form>
         </div>
@@ -432,10 +503,12 @@ const Home = () => {
           fare={fare?.[selectedVehicle]}
           selectedVehicle={selectedVehicle}
           handleConfirmRide={handleConfirmRide}
+          loading={loading}
+          setLoading={setLoading}
         />
       </div>
       <div
-        ref={vehicleFoundRef}
+        ref={lookingForDriverRef}
         className="fixed w-full z-20 bottom-0 translate-y-full bg-white px-3 py-10 pt-12"
       >
         <LookingForDriver
@@ -454,6 +527,7 @@ const Home = () => {
           vehicleFound={vehicleFound}
           confirmedRideDetails={confirmedRideDetails}
           captainDetails={captainDetails}
+          handleCancelRide={handleCancelRide}
         />
       </div>
     </div>

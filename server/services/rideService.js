@@ -160,7 +160,7 @@ const startRideService = async (rideId, otp, captain) => {
     throw new Error("no ride found");
   }
 
-  if (ride.status !== "accepted") {
+  if (ride.status !== "ongoing") {
     throw new Error("ride not accepted!");
   }
 
@@ -172,7 +172,7 @@ const startRideService = async (rideId, otp, captain) => {
       _id: rideId,
     },
     {
-      status: "ongoing",
+      status: "pickedup",
     }
   );
 
