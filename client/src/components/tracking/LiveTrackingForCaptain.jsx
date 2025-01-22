@@ -21,12 +21,7 @@ const userIconUrl =
 
 const createImageMarkerContent = (imgUrl) => {
   const markerEl = document.createElement("div");
-  markerEl.style.cssText = `
-    width: 60px;
-    height: 60px;
-    background: url(${imgUrl}) no-repeat center center;
-    background-size: contain;
-  `;
+  markerEl.style.cssText = `width: 60px; height: 60px; background: url(${imgUrl}) no-repeat center center; background-size: contain;`;
   return markerEl;
 };
 
@@ -43,7 +38,9 @@ const animateMarker = (marker, oldLoc, newLoc, duration = 5000) => {
     count++;
     const lat = oldLoc.lat + latStep * count;
     const lng = oldLoc.lng + lngStep * count;
-    marker.position = new window.google.maps.LatLng(lat, lng);
+    if (window !== undefined) {
+      marker.position = new window.google.maps.LatLng(lat, lng);
+    }
     if (count === steps) clearInterval(interval);
   }, duration / steps);
 };

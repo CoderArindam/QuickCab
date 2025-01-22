@@ -17,6 +17,7 @@ import CaptainLogout from "./pages/captain/CaptainLogout";
 import CaptainRiding from "./pages/captain/CaptainRiding";
 import CaptainRideFinished from "./pages/captain/CaptainRideFinished";
 import CaptainPaymentPage from "./components/captain/CaptainPayment";
+import ForgotPassword from "./pages/user/UserForgotPassword";
 
 const App = () => {
   return (
@@ -26,6 +27,7 @@ const App = () => {
         <Route path="/login" element={<UserLogin />} />
         <Route path="/riding" element={<Riding />} />
         <Route path="/signup" element={<UserSignup />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/captain-login" element={<CaptainLogin />} />
         <Route path="/captain-signup" element={<CaptainSignup />} />
         <Route path="/captain-payment" element={<CaptainPaymentPage />} />

@@ -21,12 +21,7 @@ const userIconUrl =
 
 const createImageMarkerContent = (imgUrl) => {
   const markerEl = document.createElement("div");
-  markerEl.style.cssText = `
-    width: 60px;
-    height: 60px;
-    background: url(${imgUrl}) no-repeat center center;
-    background-size: contain;
-  `;
+  markerEl.style.cssText = `width: 60px; height: 60px; background: url(${imgUrl}) no-repeat center center; background-size: contain;`;
   return markerEl;
 };
 
@@ -43,7 +38,10 @@ const animateMarker = (marker, oldLoc, newLoc, duration = 5000) => {
     count++;
     const lat = oldLoc.lat + latStep * count;
     const lng = oldLoc.lng + lngStep * count;
-    marker.position = new window.google.maps.LatLng(lat, lng);
+    if (window !== undefined) {
+      marker.position = new window.google.maps.LatLng(lat, lng);
+    }
+
     if (count === steps) clearInterval(interval);
   }, duration / steps);
 };
@@ -69,13 +67,13 @@ const LiveTrackingForUser = ({
 
   // Fetch directions
   useEffect(() => {
-    if (!captainLocation || !userLocation || !googleLoaded) {
+    if (!captainLocation || !userLocation || !googleLoaded || !window.google) {
       setDirections(null);
       return;
     }
 
     const directionsService = new window.google.maps.DirectionsService();
-    directionsService.route(
+    directionsService?.route(
       {
         origin: captainLocation,
         destination: userLocation,
@@ -93,7 +91,7 @@ const LiveTrackingForUser = ({
 
   // Update captain's marker
   useEffect(() => {
-    if (!googleLoaded || !map || !captainLocation) return;
+    if (!googleLoaded || !map || !captainLocation || !window.google) return;
 
     const vehicleType = captainDetails?.vehicle?.vehicleType || "car";
     const captainEl = createImageMarkerContent(vehicleIcons[vehicleType]);
@@ -113,7 +111,7 @@ const LiveTrackingForUser = ({
 
   // Update user's marker
   useEffect(() => {
-    if (!googleLoaded || !map || !userLocation) return;
+    if (!googleLoaded || !map || !userLocation || !window.google) return;
 
     const userEl = createImageMarkerContent(userIconUrl);
 
@@ -136,7 +134,7 @@ const LiveTrackingForUser = ({
 
   // Adjust map bounds dynamically
   useEffect(() => {
-    if (map && captainLocation && userLocation) {
+    if (map && captainLocation && userLocation && window.google) {
       const bounds = new window.google.maps.LatLngBounds();
       bounds.extend(captainLocation);
       bounds.extend(userLocation);

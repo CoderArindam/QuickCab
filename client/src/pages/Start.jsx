@@ -14,13 +14,13 @@ const Start = () => {
               to="/login"
               className="flex items-center justify-center w-full bg-black text-white py-3 rounded-lg"
             >
-              Continue as user
+              continue as user
             </Link>
             <Link
               to="/captain-login"
               className="flex items-center justify-center w-full bg-black text-white py-3 rounded-lg"
             >
-              Continue as captain
+              continue as captain
             </Link>
           </div>
         </div>
