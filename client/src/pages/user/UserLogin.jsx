@@ -2,12 +2,17 @@ import { useContext, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { UserDataContext } from "../../context/UserContext";
+import { ClipLoader } from "react-spinners";
+import { toast } from "react-toastify";
+import { Eye, EyeOff } from "lucide-react";
+import logo from "/logo.png";
 
 const UserLogin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(false); // loading state
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const navigate = useNavigate();
   const { setUser } = useContext(UserDataContext);
@@ -15,7 +20,7 @@ const UserLogin = () => {
   const submitHandler = async (e) => {
     e.preventDefault();
     setError(null);
-    setLoading(true); // Start loading
+    setLoading(true);
 
     try {
       const response = await axios.post(
@@ -27,89 +32,119 @@ const UserLogin = () => {
         const data = response.data;
         setUser(data.user);
         localStorage.setItem("token", data.token);
+        toast.success("Successfully logged in!");
         navigate("/home");
       }
     } catch (err) {
-      if (err.response) {
-        setError(
-          err.response.data?.message || "Login failed. Please try again."
-        );
-      } else {
-        setError(err.message || "An unknown error occurred.");
-      }
+      const errorMessage =
+        err.response?.data?.message || "Login failed. Please try again.";
+      toast.error(errorMessage);
+      setError(errorMessage);
     } finally {
-      setLoading(false); // End loading
+      setLoading(false);
     }
   };
 
   return (
-    <div className="p-7 h-screen flex flex-col justify-between">
-      <div>
-        <img
-          className="w-16 mb-10"
-          src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQYQy-OIkA6In0fTvVwZADPmFFibjmszu2A0g&s"
-          alt="logo"
-        />
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-gray-50 p-7 flex flex-col justify-center items-center relative overflow-hidden">
+      {/* Decorative elements */}
+      <div className="absolute top-0 left-0 w-full h-full">
+        <div className="absolute top-10 left-10 w-32 h-32 bg-slate-200 rounded-full mix-blend-multiply filter blur-xl opacity-60 animate-blob"></div>
+        <div className="absolute top-0 right-10 w-32 h-32 bg-gray-200 rounded-full mix-blend-multiply filter blur-xl opacity-60 animate-blob animation-delay-2000"></div>
+        <div className="absolute -bottom-8 left-20 w-32 h-32 bg-slate-100 rounded-full mix-blend-multiply filter blur-xl opacity-60 animate-blob animation-delay-4000"></div>
+      </div>
 
-        <form onSubmit={submitHandler}>
-          <h3 className="text-lg font-medium mb-2">What's your email</h3>
-          <input
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className="bg-[#eeeeee] mb-7 rounded-lg px-4 py-2 border w-full text-lg placeholder:text-base"
-            type="email"
-            placeholder="email@example.com"
+      <div className="w-full max-w-md bg-white/95  rounded-2xl shadow-lg p-8 relative">
+        <div className="flex justify-center mb-8">
+          <img
+            className="w-24 h-24 object-contain drop-shadow-md hover:scale-105 invert transition-transform duration-300"
+            src={logo}
+            alt="logo"
           />
+        </div>
 
-          <h3 className="text-lg font-medium mb-2">Enter Password</h3>
-          <input
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            className="bg-[#eeeeee] mb-3 rounded-lg px-4 py-2 border w-full text-lg placeholder:text-base"
-            type="password"
-            placeholder="password"
-          />
+        <h2 className="text-3xl font-bold text-center mb-8 text-gray-800">
+          Welcome to QuickCab
+        </h2>
 
-          {/* Show error if any */}
-          {error && (
-            <p className="text-red-500 mb-3 text-center font-semibold">
-              {error}
-            </p>
-          )}
+        <form onSubmit={submitHandler} className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Email Address
+            </label>
+            <input
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-slate-500 focus:border-slate-500 transition-all duration-200 bg-white text-gray-900 placeholder:text-gray-400 hover:border-slate-400"
+              type="email"
+              placeholder="email@example.com"
+            />
+          </div>
 
-          {/* Loading indicator */}
-          {loading && (
-            <p className="text-center text-lg font-medium mb-3">
-              Signing in...
-            </p>
-          )}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Password
+            </label>
+            <div className="relative">
+              <input
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-slate-500 focus:border-slate-500 transition-all duration-200 bg-white text-gray-900 placeholder:text-gray-400 hover:border-slate-400"
+                type={showPassword ? "text" : "password"}
+                placeholder="Enter your password"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+              >
+                {showPassword ? (
+                  <EyeOff size={20} className="opacity-75" />
+                ) : (
+                  <Eye size={20} className="opacity-75" />
+                )}
+              </button>
+            </div>
+          </div>
 
           <button
             type="submit"
-            disabled={loading} // optionally disable button while loading
-            className="bg-[#111] text-white font-semibold mb-3 rounded-lg px-4 py-2 w-full text-lg"
+            disabled={loading}
+            className="w-full bg-slate-800 hover:bg-slate-900 text-white font-medium py-3.5 rounded-lg transition-all duration-200 flex items-center justify-center space-x-2 disabled:opacity-70 disabled:cursor-not-allowed shadow-sm"
           >
-            Login
+            {loading ? (
+              <>
+                <ClipLoader size={20} color="#ffffff" />
+                <span>Signing in...</span>
+              </>
+            ) : (
+              "Sign In"
+            )}
           </button>
         </form>
 
-        <p className="text-center">
-          New here?{" "}
-          <Link to="/signup" className="text-blue-600">
-            Create new Account
-          </Link>
-        </p>
-      </div>
+        <div className="mt-8">
+          <p className="text-center text-gray-600">
+            New to QuickCab?{" "}
+            <Link
+              to="/signup"
+              className="text-slate-700 font-medium hover:text-slate-900 transition-colors duration-200"
+            >
+              Create new Account
+            </Link>
+          </p>
+        </div>
 
-      <div>
-        <Link
-          to="/captain-login"
-          className="bg-[#10b461] flex items-center justify-center text-white font-semibold mb-5 rounded-lg px-4 py-2 w-full text-lg"
-        >
-          Sign in as Captain
-        </Link>
+        <div className="mt-4">
+          <Link
+            to="/forgot-password"
+            className="block text-center text-gray-500 hover:text-gray-700 text-sm transition-colors duration-200"
+          >
+            Forgot your password?
+          </Link>
+        </div>
       </div>
     </div>
   );
