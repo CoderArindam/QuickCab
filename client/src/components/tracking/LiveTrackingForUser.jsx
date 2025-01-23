@@ -38,7 +38,9 @@ const animateMarker = (marker, oldLoc, newLoc, duration = 5000) => {
     count++;
     const lat = oldLoc.lat + latStep * count;
     const lng = oldLoc.lng + lngStep * count;
-    if (window !== undefined) {
+
+    // Enhanced null checks
+    if (window?.google?.maps && marker) {
       marker.position = new window.google.maps.LatLng(lat, lng);
     }
 
@@ -50,6 +52,11 @@ const LiveTrackingForUser = ({
   captainLocation,
   userLocation,
   captainDetails,
+  panelOpen,
+  showVehiclePanel,
+  showConfirmRidePanel,
+  showLookingForDriver,
+  showWaitingForDriver,
 }) => {
   const [googleLoaded, setGoogleLoaded] = useState(false);
   const [map, setMap] = useState(null);
@@ -57,6 +64,7 @@ const LiveTrackingForUser = ({
   const [mapCenter, setMapCenter] = useState(
     userLocation || { lat: 0, lng: 0 }
   );
+  const [loadError, setLoadError] = useState(null);
 
   const userMarkerRef = useRef(null);
   const captainMarkerRef = useRef(null);
@@ -67,7 +75,12 @@ const LiveTrackingForUser = ({
 
   // Fetch directions
   useEffect(() => {
-    if (!captainLocation || !userLocation || !googleLoaded || !window.google) {
+    if (
+      !captainLocation ||
+      !userLocation ||
+      !googleLoaded ||
+      !window?.google?.maps
+    ) {
       setDirections(null);
       return;
     }
@@ -91,7 +104,8 @@ const LiveTrackingForUser = ({
 
   // Update captain's marker
   useEffect(() => {
-    if (!googleLoaded || !map || !captainLocation || !window.google) return;
+    if (!googleLoaded || !map || !captainLocation || !window?.google?.maps)
+      return;
 
     const vehicleType = captainDetails?.vehicle?.vehicleType || "car";
     const captainEl = createImageMarkerContent(vehicleIcons[vehicleType]);
@@ -111,7 +125,7 @@ const LiveTrackingForUser = ({
 
   // Update user's marker
   useEffect(() => {
-    if (!googleLoaded || !map || !userLocation || !window.google) return;
+    if (!googleLoaded || !map || !userLocation || !window?.google?.maps) return;
 
     const userEl = createImageMarkerContent(userIconUrl);
 
@@ -134,7 +148,7 @@ const LiveTrackingForUser = ({
 
   // Adjust map bounds dynamically
   useEffect(() => {
-    if (map && captainLocation && userLocation && window.google) {
+    if (map && captainLocation && userLocation && window?.google?.maps) {
       const bounds = new window.google.maps.LatLngBounds();
       bounds.extend(captainLocation);
       bounds.extend(userLocation);
@@ -142,18 +156,39 @@ const LiveTrackingForUser = ({
     }
   }, [map, captainLocation, userLocation]);
 
+  // Error handling for Google Maps script load
+  const onLoadError = useCallback((error) => {
+    console.error("Google Maps script load error:", error);
+    setLoadError(error);
+  }, []);
+
   return (
     <LoadScript
       googleMapsApiKey={GOOGLE_MAPS_API_KEY}
       libraries={LIBRARIES}
       onLoad={() => setGoogleLoaded(true)}
+      onError={onLoadError}
     >
-      {googleLoaded ? (
+      {loadError ? (
+        <div>Error loading Google Maps: {loadError.message}</div>
+      ) : googleLoaded ? (
         <GoogleMap
           onLoad={onMapLoad}
           center={mapCenter}
           zoom={14}
-          mapContainerStyle={{ width: "100%", height: "100%" }}
+          mapContainerStyle={{
+            width: "100%",
+            height: showVehiclePanel
+              ? "50%"
+              : showConfirmRidePanel
+              ? "50%"
+              : showLookingForDriver
+              ? "50%"
+              : showWaitingForDriver
+              ? "50%"
+              : "70%",
+            zIndex: panelOpen ? 9 : 99,
+          }}
           options={{
             mapId: MAP_ID,
           }}

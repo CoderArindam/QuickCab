@@ -22,8 +22,8 @@ import LiveTracking from "../../components/tracking/LiveTracking";
 import LiveTrackingForUser from "../../components/tracking/LiveTrackingForUser";
 
 const Home = () => {
-  const [pickup, setPickup] = useState();
-  const [destination, setDestination] = useState();
+  const [pickup, setPickup] = useState("");
+  const [destination, setDestination] = useState("");
   const [panelOpen, setPanelOpen] = useState(false);
   const panelRef = useRef(null);
   const vehicleFoundRef = useRef(null);
@@ -406,11 +406,16 @@ const Home = () => {
         captainLocation={captainDetails?.location}
         userLocation={userLocation?.location}
         captainDetails={captainDetails}
+        panelOpen={panelOpen}
+        showVehiclePanel={showVehiclePanel}
+        showConfirmRidePanel={showConfirmRidePanel}
+        showLookingForDriver={showLookingForDriver}
+        showWaitingForDriver={showWaitingForDriver}
       />
       {/* image for temporary use  */}
 
       <div
-        className={`flex-col justify-end h-screen absolute top-0 w-full z-20 ${
+        className={`flex-col justify-end h-screen absolute top-0 w-full z-20 overflow-auto ${
           foundTrip ? "hidden" : "flex"
         }`}
       >
@@ -466,22 +471,24 @@ const Home = () => {
             </button>
           </form>
         </div>
-        <div className="bg-white h-0" ref={panelRef}>
-          <LocationSearchPanel
-            suggestions={suggestions}
-            setPanelOpen={setPanelOpen}
-            loading={loading}
-            pickup={pickup}
-            setPickup={setPickup}
-            setDestination={setDestination}
-            destination={destination}
-            activeField={activeField} // Pass activeField here
-          />
-        </div>
+        {panelOpen && (
+          <div className="bg-white h-0" ref={panelRef}>
+            <LocationSearchPanel
+              suggestions={suggestions}
+              setPanelOpen={setPanelOpen}
+              loading={loading}
+              pickup={pickup}
+              setPickup={setPickup}
+              setDestination={setDestination}
+              destination={destination}
+              activeField={activeField} // Pass activeField here
+            />
+          </div>
+        )}
       </div>
       <div
         ref={vehiclePanelRef}
-        className="fixed w-full z-20 bottom-0 translate-y-full bg-white px-3 py-10 pt-12"
+        className="fixed w-full z-20 bottom-0 translate-y-full bg-white px-3 py-10 pt-12 h-[50%] overflow-auto"
       >
         <VehiclePanel
           setshowVehiclePanel={setshowVehiclePanel}
@@ -492,7 +499,7 @@ const Home = () => {
       </div>
       <div
         ref={confirmRidePanelRef}
-        className="fixed w-full z-20 bottom-0 translate-y-full bg-white px-3 py-10 pt-12"
+        className="fixed w-full z-20 bottom-0 translate-y-full bg-white px-3 py-6 pt-6 h-[50%] overflow-auto"
       >
         <ConfirmedRide
           setShowConfirmRidePanel={setShowConfirmRidePanel}
@@ -509,7 +516,7 @@ const Home = () => {
       </div>
       <div
         ref={lookingForDriverRef}
-        className="fixed w-full z-20 bottom-0 translate-y-full bg-white px-3 py-10 pt-12"
+        className="fixed w-full z-20 bottom-0 translate-y-full bg-white px-3 py-10 pt-12 h-[50%] overflow-auto"
       >
         <LookingForDriver
           setVehicleFound={setVehicleFound}
@@ -518,7 +525,7 @@ const Home = () => {
         />
       </div>
       <div
-        className="fixed w-full z-20 bottom-0 translate-y-full  bg-white px-3 py-10 pt-12"
+        className="fixed w-full z-20 bottom-0 translate-y-full  bg-white px-3 py-10 pt-4 h-[50%] overflow-auto"
         ref={waitingForDriverRef}
       >
         <WaitingForDriver

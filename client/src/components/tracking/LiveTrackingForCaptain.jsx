@@ -38,9 +38,12 @@ const animateMarker = (marker, oldLoc, newLoc, duration = 5000) => {
     count++;
     const lat = oldLoc.lat + latStep * count;
     const lng = oldLoc.lng + lngStep * count;
-    if (window !== undefined) {
+
+    // Enhanced null checks
+    if (window?.google?.maps && marker) {
       marker.position = new window.google.maps.LatLng(lat, lng);
     }
+
     if (count === steps) clearInterval(interval);
   }, duration / steps);
 };
@@ -52,6 +55,7 @@ const LiveTrackingForCaptain = ({ userLocation, captainLocation, captain }) => {
   const [mapCenter, setMapCenter] = useState(
     captainLocation || { lat: 0, lng: 0 }
   );
+  const [loadError, setLoadError] = useState(null);
 
   const userMarkerRef = useRef(null);
   const captainMarkerRef = useRef(null);
@@ -62,7 +66,13 @@ const LiveTrackingForCaptain = ({ userLocation, captainLocation, captain }) => {
 
   // Fetch directions for the polyline
   useEffect(() => {
-    if (!captainLocation || !userLocation || !googleLoaded) return;
+    if (
+      !captainLocation ||
+      !userLocation ||
+      !googleLoaded ||
+      !window?.google?.maps
+    )
+      return;
 
     const directionsService = new window.google.maps.DirectionsService();
     directionsService.route(
@@ -83,7 +93,8 @@ const LiveTrackingForCaptain = ({ userLocation, captainLocation, captain }) => {
 
   // Update captain's marker
   useEffect(() => {
-    if (!googleLoaded || !map || !captainLocation) return;
+    if (!googleLoaded || !map || !captainLocation || !window?.google?.maps)
+      return;
 
     const vehicleType = captain?.vehicle?.vehicleType || "car";
     const captainEl = createImageMarkerContent(vehicleIcons[vehicleType]);
@@ -104,7 +115,7 @@ const LiveTrackingForCaptain = ({ userLocation, captainLocation, captain }) => {
 
   // Update user's marker
   useEffect(() => {
-    if (!googleLoaded || !map || !userLocation) return;
+    if (!googleLoaded || !map || !userLocation || !window?.google?.maps) return;
 
     const userEl = createImageMarkerContent(userIconUrl);
     if (!userMarkerRef.current) {
@@ -124,7 +135,7 @@ const LiveTrackingForCaptain = ({ userLocation, captainLocation, captain }) => {
 
   // Adjust map bounds dynamically
   useEffect(() => {
-    if (map && captainLocation && userLocation) {
+    if (map && captainLocation && userLocation && window?.google?.maps) {
       const bounds = new window.google.maps.LatLngBounds();
       bounds.extend(captainLocation);
       bounds.extend(userLocation);
@@ -132,13 +143,22 @@ const LiveTrackingForCaptain = ({ userLocation, captainLocation, captain }) => {
     }
   }, [map, captainLocation, userLocation]);
 
+  // Error handling for Google Maps script load
+  const onLoadError = useCallback((error) => {
+    console.error("Google Maps script load error:", error);
+    setLoadError(error);
+  }, []);
+
   return (
     <LoadScript
       googleMapsApiKey={GOOGLE_MAPS_API_KEY}
       libraries={LIBRARIES}
       onLoad={() => setGoogleLoaded(true)}
+      onError={onLoadError}
     >
-      {googleLoaded ? (
+      {loadError ? (
+        <div>Error loading Google Maps: {loadError.message}</div>
+      ) : googleLoaded ? (
         <GoogleMap
           onLoad={onMapLoad}
           center={mapCenter}

@@ -21,14 +21,14 @@ const WaitingForDriver = ({
 
   return (
     <div>
-      <h5
+      {/* <h5
         className="p-1 text-center w-[93%] absolute top-0"
         onClick={() => {
           setShowWaitingForDriver(false);
         }}
       >
         <i className="text-3xl text-gray-200 ri-arrow-down-wide-line"></i>
-      </h5>
+      </h5> */}
 
       <div className="title border-b-2 flex justify-between items-center mb-4 pb-4">
         <h3 className="text-xl p-3 font-medium text">
@@ -40,7 +40,7 @@ const WaitingForDriver = ({
       </div>
 
       <div className="flex items-center justify-between">
-        <img className="h-[100px]" src={vehicleImages[vehicleType]} alt="" />
+        <img className="h-[60px]" src={vehicleImages[vehicleType]} alt="" />
         <div className="text-right">
           <h2 className="text-lg font-medium capitalize">
             {fullName?.firstName} {fullName?.lastName}

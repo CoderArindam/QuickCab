@@ -19,14 +19,17 @@ const ConfirmedRide = ({
 
   return (
     <div>
-      <h5 className="p-1 text-center w-[93%] absolute top-0">
+      <h5
+        className="p-1 text-center w-[93%] absolute top-0"
+        onClick={() => setShowConfirmRidePanel(false)}
+      >
         <i className="text-3xl text-gray-200 ri-arrow-down-wide-line"></i>
       </h5>
-      <h3 className="text-2xl font-semibold mb-5">Confirm your Ride</h3>
+      <h3 className="text-2xl font-semibold mb-3">Confirm your Ride</h3>
 
       <div className="flex gap-2 justify-between flex-col items-center">
         <img
-          className="h-28"
+          className="h-16"
           src={vehicleImages[selectedVehicle]} // Dynamically set image based on selected vehicle
           alt={selectedVehicle}
         />
